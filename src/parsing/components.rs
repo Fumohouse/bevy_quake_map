@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use glam::Vec3;
 use nom::{
     character::complete::{char, multispace0, multispace1},
     combinator::map,
@@ -13,20 +14,18 @@ use nom::{
 };
 
 use super::{
-    data::{Brush, BrushFace, Entity, Point, UvAxis},
+    data::{Brush, BrushFace, Entity, UvAxis},
     util::{escaped_string, float_list, identifier, ignored},
 };
 
 /// Matches a 3D coordinate in ( x y z ) form, as used in brushes
 fn point<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     i: &'a str,
-) -> IResult<&'a str, Point, E> {
+) -> IResult<&'a str, Vec3, E> {
     context(
         "point",
-        map(delimited(char('('), float_list(3), char(')')), |v| Point {
-            x: v[0],
-            y: v[1],
-            z: v[2],
+        map(delimited(char('('), float_list(3), char(')')), |v| {
+            Vec3::new(v[0], v[1], v[2])
         }),
     )(i)
 }
@@ -38,9 +37,7 @@ fn uv_axis<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     context(
         "uv_axis",
         map(delimited(char('['), float_list(4), char(']')), |v| UvAxis {
-            x: v[0],
-            y: v[1],
-            z: v[2],
+            axis: Vec3::new(v[0], v[1], v[2]),
             offset: v[3],
         }),
     )(i)
@@ -129,43 +126,28 @@ pub fn entity<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 
 #[cfg(test)]
 mod tests {
+    use glam::Vec3;
     use std::collections::HashMap;
 
     use super::{
-        super::data::{Brush, BrushFace, Entity, Point, UvAxis},
+        super::data::{Brush, BrushFace, Entity, UvAxis},
         brush, brush_face, entity, point, uv_axis,
     };
 
     fn test_brush_face(i: f32) -> BrushFace {
         BrushFace {
             points: [
-                Point {
-                    x: i,
-                    y: i + 1.0,
-                    z: i + 2.0,
-                },
-                Point {
-                    x: i + 3.0,
-                    y: i + 4.0,
-                    z: i + 5.0,
-                },
-                Point {
-                    x: i + 6.0,
-                    y: i + 7.0,
-                    z: i + 8.0,
-                },
+                Vec3::new(i, i + 1.0, i + 2.0),
+                Vec3::new(i + 3.0, i + 4.0, i + 5.0),
+                Vec3::new(i + 6.0, i + 7.0, i + 8.0),
             ],
             texture: "TEXTURE".to_string(),
             u: UvAxis {
-                x: i + 9.0,
-                y: i + 10.0,
-                z: i + 11.0,
+                axis: Vec3::new(i + 9.0, i + 10.0, i + 11.0),
                 offset: i + 12.0,
             },
             v: UvAxis {
-                x: i + 13.0,
-                y: i + 14.0,
-                z: i + 15.0,
+                axis: Vec3::new(i + 13.0, i + 14.0, i + 15.0),
                 offset: i + 16.0,
             },
             rotation: i + 17.0,
@@ -178,14 +160,7 @@ mod tests {
     fn test_parse_point() {
         assert_eq!(
             point::<()>("( 16 16.0 0.375 )"),
-            Ok((
-                "",
-                Point {
-                    x: 16.0,
-                    y: 16.0,
-                    z: 0.375
-                }
-            ))
+            Ok(("", Vec3::new(16.0, 16.0, 0.375)))
         );
     }
 
@@ -196,9 +171,7 @@ mod tests {
             Ok((
                 "",
                 UvAxis {
-                    x: -1.0,
-                    y: 0.0,
-                    z: 1.0,
+                    axis: Vec3::new(-1.0, 0.0, 1.0),
                     offset: 2.0,
                 }
             ))

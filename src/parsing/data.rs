@@ -1,23 +1,15 @@
+use glam::Vec3;
 use std::collections::HashMap;
 
 #[derive(PartialEq, Debug)]
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-#[derive(PartialEq, Debug)]
 pub struct UvAxis {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    pub axis: Vec3,
     pub offset: f32,
 }
 
 #[derive(PartialEq, Debug)]
 pub struct BrushFace {
-    pub points: [Point; 3],
+    pub points: [Vec3; 3],
     pub texture: String,
     pub u: UvAxis,
     pub v: UvAxis,
