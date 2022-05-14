@@ -13,10 +13,8 @@ use nom::{
     IResult,
 };
 
-use super::{
-    data::{Brush, BrushFace, Entity, UvAxis},
-    util::{escaped_string, float_list, identifier, ignored},
-};
+use super::util::{escaped_string, float_list, identifier, ignored};
+use crate::data::{Brush, BrushFace, Entity, UvAxis};
 
 /// Matches a 3D coordinate in ( x y z ) form, as used in brushes
 fn point<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
@@ -126,13 +124,10 @@ pub fn entity<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 
 #[cfg(test)]
 mod tests {
+    use super::{brush, brush_face, entity, point, uv_axis};
+    use crate::data::{Brush, BrushFace, Entity, UvAxis};
     use glam::Vec3;
     use std::collections::HashMap;
-
-    use super::{
-        super::data::{Brush, BrushFace, Entity, UvAxis},
-        brush, brush_face, entity, point, uv_axis,
-    };
 
     fn test_brush_face(i: f32) -> BrushFace {
         BrushFace {

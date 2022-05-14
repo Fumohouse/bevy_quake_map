@@ -9,17 +9,15 @@ use nom::{
     IResult,
 };
 
+use crate::data::Map;
+
 mod test_data;
 
 pub mod components;
 use components::entity;
 
-pub mod data;
-use data::Map;
-
-use self::util::ignored;
-
 mod util;
+use util::ignored;
 
 pub fn parse_map<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     i: &'a str,
