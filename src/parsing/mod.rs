@@ -11,8 +11,6 @@ use nom::{
 
 use crate::data::Map;
 
-mod test_data;
-
 pub mod components;
 use components::entity;
 
@@ -33,7 +31,8 @@ pub fn parse_map<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_map, test_data};
+    use crate::test_data;
+    use super::parse_map;
 
     #[test]
     fn test_parse_map() {

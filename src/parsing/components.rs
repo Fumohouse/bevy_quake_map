@@ -59,15 +59,15 @@ fn brush_face<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
             |t| {
                 let (points, texture, mut uv_axes, rotation, x_scale, y_scale) = t;
 
-                BrushFace {
-                    points: points.try_into().unwrap(),
-                    texture: texture.to_string(),
-                    u: uv_axes.remove(0),
-                    v: uv_axes.remove(0),
+                BrushFace::new(
+                    points.try_into().unwrap(),
+                    texture.to_string(),
+                    uv_axes.remove(0),
+                    uv_axes.remove(0),
                     rotation,
                     x_scale,
                     y_scale,
-                }
+                )
             },
         ),
     )(i)
@@ -130,25 +130,25 @@ mod tests {
     use std::collections::HashMap;
 
     fn test_brush_face(i: f32) -> BrushFace {
-        BrushFace {
-            points: [
+        BrushFace::new(
+            [
                 Vec3::new(i, i + 1.0, i + 2.0),
                 Vec3::new(i + 3.0, i + 4.0, i + 5.0),
                 Vec3::new(i + 6.0, i + 7.0, i + 8.0),
             ],
-            texture: "TEXTURE".to_string(),
-            u: UvAxis {
+            "TEXTURE".to_string(),
+            UvAxis {
                 axis: Vec3::new(i + 9.0, i + 10.0, i + 11.0),
                 offset: i + 12.0,
             },
-            v: UvAxis {
+            UvAxis {
                 axis: Vec3::new(i + 13.0, i + 14.0, i + 15.0),
                 offset: i + 16.0,
             },
-            rotation: i + 17.0,
-            x_scale: i + 18.0,
-            y_scale: i + 19.0,
-        }
+            i + 17.0,
+            i + 18.0,
+            i + 19.0,
+        )
     }
 
     #[test]
