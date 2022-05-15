@@ -1,5 +1,5 @@
 use super::UvAxis;
-use glam::Vec3;
+use glam::{Vec3, Vec4};
 
 #[derive(PartialEq, Debug)]
 pub struct BrushFace {
@@ -66,30 +66,43 @@ impl BrushFace {
                 / determinant,
         )
     }
+
+    pub fn tangent(&self) -> Vec4 {
+        // u: tangent, v: bitangent
+        // cross(normal, u) * w = v
+        // -> w = sign(dot(cross(normal, u), v))
+        let u = self.u.axis;
+        let w = (self.normal.cross(u).dot(self.v.axis)).signum();
+
+        Vec4::new(u.x, u.y, u.z, w)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{parsing::parse_map, test_data};
+    use crate::test_utils::get_brush;
     use glam::Vec3;
 
     #[test]
     fn test_intersect_faces() {
-        let map = parse_map::<()>(test_data::TEST_MAP)
-            .expect("failed to parse")
-            .1;
+        let brush = get_brush();
 
-        let brush = map
-            .entities
-            .get(0)
-            .expect("no entity")
-            .brushes
-            .get(0)
-            .expect("no brush");
-
-        let intersect = brush.faces[0].intersect_faces(&brush.faces[1], &brush.faces[2])
+        let intersect = brush.faces[0]
+            .intersect_faces(&brush.faces[1], &brush.faces[2])
             .expect("failed to find intersect");
 
         assert!(intersect.abs_diff_eq(Vec3::new(-16.0, -16.0, -16.0), crate::EPSILON))
+    }
+
+    #[test]
+    fn test_tangent() {
+        let brush = get_brush();
+        let face = brush.faces.get(0).expect("no face");
+
+        let tangent = face.tangent();
+
+        assert!(
+            (face.normal.cross(face.u.axis) * tangent.w).abs_diff_eq(face.v.axis, crate::EPSILON)
+        );
     }
 }

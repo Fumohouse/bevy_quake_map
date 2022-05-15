@@ -11,4 +11,4 @@ pub mod data;
 pub mod game_config;
 pub mod parsing;
 
-mod test_data;
+mod test_utils;

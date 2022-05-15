@@ -1,5 +1,10 @@
 #![cfg(test)]
 
+use crate::{
+    data::{Brush, Entity, Map},
+    parsing::parse_map,
+};
+
 pub const TEST_MAP: &str = r#"// Game: Fumohouse
 // Format: Valve
 // entity 0
@@ -17,3 +22,15 @@ pub const TEST_MAP: &str = r#"// Game: Fumohouse
 ( 16 64 16 ) ( 16 64 17 ) ( 16 65 16 ) map/wall2 [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1
 }
 }"#;
+
+fn get_map() -> Map {
+    parse_map::<()>(TEST_MAP).expect("failed to parse").1
+}
+
+fn get_entity() -> Entity {
+    get_map().entities.remove(0)
+}
+
+pub fn get_brush() -> Brush {
+    get_entity().brushes.remove(0)
+}

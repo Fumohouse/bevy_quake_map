@@ -21,23 +21,12 @@ impl Brush {
 
 #[cfg(test)]
 mod tests {
+    use crate::test_utils::get_brush;
     use glam::Vec3;
-
-    use crate::{parsing::parse_map, test_data};
 
     #[test]
     fn test_brush_contains() {
-        let map = parse_map::<()>(test_data::TEST_MAP)
-            .expect("failed to parse")
-            .1;
-
-        let brush = map
-            .entities
-            .get(0)
-            .expect("no entity")
-            .brushes
-            .get(0)
-            .expect("no brush");
+        let brush = get_brush();
 
         assert!(brush.contains(Vec3::new(0.0, 0.0, 0.0)));
         assert!(brush.contains(Vec3::new(16.0, 16.0, 16.0)));
