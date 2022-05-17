@@ -5,6 +5,10 @@ edition = "2021"
 
 [dependencies]
 
+# bevy
+bevy = "0.7"
+heron = { version = "3.0", features = ["3d"] }
+
 # serde
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

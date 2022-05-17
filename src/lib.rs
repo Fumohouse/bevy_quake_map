@@ -3,6 +3,8 @@
 
 pub const EPSILON: f32 = 0.001;
 
+extern crate bevy;
+extern crate heron;
 extern crate nom;
 extern crate serde;
 extern crate serde_json;
@@ -10,5 +12,7 @@ extern crate serde_json;
 pub mod data;
 pub mod game_config;
 pub mod parsing;
+
+mod loader;
 
 mod test_utils;
