@@ -29,6 +29,7 @@ impl MapSpawner {
 
             for entity in &map.entities {
                 let mut ecs_entity = world.spawn();
+                ecs_entity.insert_bundle(TransformBundle::identity());
 
                 ecs_entity.with_children(|parent| {
                     for brush in &entity.brushes {
