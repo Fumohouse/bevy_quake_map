@@ -3,7 +3,7 @@
 use super::asset::MapAsset;
 use bevy::{
     ecs::event::{Events, ManualEventReader},
-    hierarchy::BuildWorldChildren,
+    hierarchy::{BuildWorldChildren, DespawnRecursiveExt},
     pbr::PbrBundle,
     prelude::{default, AssetEvent, Assets, Entity, Handle, Mut, Transform, World},
     transform::TransformBundle,
@@ -21,7 +21,6 @@ pub enum MapSpawnError {
 #[derive(Default)]
 pub struct MapSpawner {
     queued_maps: Vec<Handle<MapAsset>>,
-    queued_for_respawn: Vec<Handle<MapAsset>>,
     event_reader: ManualEventReader<AssetEvent<MapAsset>>,
     entities: HashMap<Handle<MapAsset>, Entity>,
 }
@@ -31,7 +30,11 @@ impl MapSpawner {
         self.queued_maps.push(handle);
     }
 
-    fn spawn_handle(&mut self, world: &mut World, handle: Handle<MapAsset>) -> Result<(), MapSpawnError> {
+    fn spawn_handle(
+        &mut self,
+        world: &mut World,
+        handle: Handle<MapAsset>,
+    ) -> Result<(), MapSpawnError> {
         world.resource_scope(|world, assets: Mut<Assets<MapAsset>>| {
             let map = assets
                 .get(handle.clone_weak())
@@ -103,7 +106,7 @@ impl MapSpawner {
 
             for handle in to_respawn {
                 if let Some(entity) = map_spawner.entities.remove(&handle) {
-                    world.despawn(entity);
+                    world.entity_mut(entity).despawn_recursive();
                 }
 
                 map_spawner.queued_maps.push(handle);
