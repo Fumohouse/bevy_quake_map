@@ -10,13 +10,6 @@ use bevy::{
 };
 use heron::RigidBody;
 use std::collections::HashMap;
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum MapSpawnError {
-    #[error("the map is not loaded")]
-    MapNotLoaded,
-}
 
 #[derive(Default)]
 pub struct MapSpawner {
@@ -30,15 +23,9 @@ impl MapSpawner {
         self.queued_maps.push(handle);
     }
 
-    fn spawn_handle(
-        &mut self,
-        world: &mut World,
-        handle: Handle<MapAsset>,
-    ) -> Result<(), MapSpawnError> {
+    fn spawn_handle(&mut self, world: &mut World, handle: Handle<MapAsset>) -> Option<()> {
         world.resource_scope(|world, assets: Mut<Assets<MapAsset>>| {
-            let map = assets
-                .get(handle.clone_weak())
-                .ok_or_else(|| MapSpawnError::MapNotLoaded)?;
+            let map = assets.get(handle.clone_weak())?;
 
             let mut map_entity = world.spawn();
             map_entity.insert_bundle(TransformBundle::identity());
@@ -74,22 +61,19 @@ impl MapSpawner {
 
             self.entities.insert(handle.clone_weak(), map_entity.id());
 
-            Ok(())
+            Some(())
         })
     }
 
-    fn spawn_queued(&mut self, world: &mut World) -> Result<(), MapSpawnError> {
+    fn spawn_queued(&mut self, world: &mut World) {
         let queued = std::mem::take(&mut self.queued_maps);
 
         for handle in queued {
             match self.spawn_handle(world, handle.clone()) {
-                Ok(_) => {}
-                Err(MapSpawnError::MapNotLoaded) => self.spawn(handle),
-                Err(e) => return Err(e),
+                None => self.spawn(handle),
+                _ => {}
             }
         }
-
-        Ok(())
     }
 
     pub fn system(world: &mut World) {
@@ -112,9 +96,7 @@ impl MapSpawner {
                 map_spawner.queued_maps.push(handle);
             }
 
-            map_spawner.spawn_queued(world).unwrap_or_else(|e| {
-                panic!("map spawn failed: {}", e);
-            });
+            map_spawner.spawn_queued(world);
         });
     }
 }
