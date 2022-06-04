@@ -193,6 +193,8 @@ async fn load_brush<'a, 'b>(
 
                 if let Some(vertex) = face.intersect_faces(&faces[j], &faces[k]) {
                     if brush.contains(vertex) {
+                        let vertex = vertex.as_vec3();
+
                         face_vertices.push(vertex);
                         all_vertices.push(vertex);
                     }
@@ -200,8 +202,8 @@ async fn load_brush<'a, 'b>(
             }
         }
 
-        let u = face.u.axis;
-        let v = face.v.axis;
+        let u = face.u.axis.as_vec3();
+        let v = face.v.axis.as_vec3();
 
         utils::wind(u, v, &mut face_vertices);
 

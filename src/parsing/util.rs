@@ -5,7 +5,6 @@ use nom::{
     combinator::{map, opt, value, verify},
     error::{context, ContextError, ParseError},
     multi::{many0, separated_list0},
-    number::complete::float,
     sequence::{delimited, pair},
     IResult,
 };
@@ -31,17 +30,18 @@ pub fn ignored<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, (), E
 }
 
 /// Parses a whitespace-separated list of floats, of a specific length
-pub fn float_list<'a, E: ParseError<&'a str>>(
+pub fn generic_list<'a, T, E: ParseError<&'a str>>(
     n: usize,
-) -> impl FnMut(&'a str) -> IResult<&'a str, Vec<f32>, E> {
+    parser: fn(&'a str) -> IResult<&'a str, T, E>
+) -> impl FnMut(&'a str) -> IResult<&'a str, Vec<T>, E> {
     move |i| {
         verify(
             delimited(
                 opt(multispace0),
-                separated_list0(multispace1, float),
+                separated_list0(multispace1, parser),
                 opt(multispace0),
             ),
-            |v: &Vec<f32>| v.len() == n,
+            |v: &Vec<T>| v.len() == n,
         )(i)
     }
 }
@@ -69,7 +69,9 @@ pub fn escaped_string<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 
 #[cfg(test)]
 mod tests {
-    use super::{comment, escaped_string, float_list, identifier, ignored};
+    use nom::number::complete::float;
+
+    use super::{comment, escaped_string, generic_list, identifier, ignored};
 
     #[test]
     fn test_parse_identifier() {
@@ -94,15 +96,15 @@ mod tests {
     #[test]
     fn test_parse_float_list() {
         assert_eq!(
-            float_list::<()>(4)("   0.0  1.0 3.0 5.0"),
+            generic_list::<_, ()>(4, float)("   0.0  1.0 3.0 5.0"),
             Ok(("", vec![0.0, 1.0, 3.0, 5.0]))
         );
 
-        assert!(float_list::<()>(5)("1.0 2.0 3.0 4.0").is_err());
+        assert!(generic_list::<_, ()>(5, float)("1.0 2.0 3.0 4.0").is_err());
 
-        assert!(float_list::<()>(2)("1.0, 2.0").is_err());
+        assert!(generic_list::<_, ()>(2, float)("1.0, 2.0").is_err());
 
-        assert!(float_list::<()>(2)("1.302.2").is_err());
+        assert!(generic_list::<_, ()>(2, float)("1.302.2").is_err());
     }
 
     #[test]

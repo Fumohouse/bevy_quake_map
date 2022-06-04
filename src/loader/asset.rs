@@ -56,20 +56,20 @@ impl BrushMeshInfo {
 
         for vertex in vertices {
             self.vertices.push(*vertex);
-            self.normals.push(brush_face.normal);
-            self.tangents.push(brush_face.tangent());
+            self.normals.push(brush_face.normal.as_vec3());
+            self.tangents.push(brush_face.tangent().as_vec4());
 
             // UV calculations can take place without swizzles or transformations
-            let mut u_coord = u.axis.dot(*vertex);
-            let mut v_coord = v.axis.dot(*vertex);
+            let mut u_coord = u.axis.as_vec3().dot(*vertex);
+            let mut v_coord = v.axis.as_vec3().dot(*vertex);
 
             // This scale does not affect the translation
             u_coord /= brush_face.x_scale;
             v_coord /= brush_face.y_scale;
 
             // Measured in pixels
-            u_coord += u.offset;
-            v_coord += v.offset;
+            u_coord += u.offset as f32;
+            v_coord += v.offset as f32;
 
             self.uvs.push(Vec2::new(u_coord, v_coord));
         }

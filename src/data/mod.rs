@@ -1,4 +1,4 @@
-use glam::Vec3;
+use glam::DVec3;
 use std::collections::HashMap;
 
 mod brush;
@@ -9,8 +9,8 @@ pub use brush_face::*;
 
 #[derive(PartialEq, Debug)]
 pub struct UvAxis {
-    pub axis: Vec3,
-    pub offset: f32,
+    pub axis: DVec3,
+    pub offset: f64,
 }
 
 #[derive(PartialEq, Debug)]

@@ -1,5 +1,5 @@
 use super::UvAxis;
-use glam::{Vec3, Vec4};
+use glam::{DVec3, DVec4};
 
 #[derive(PartialEq, Debug)]
 pub struct BrushFace {
@@ -10,7 +10,7 @@ pub struct BrushFace {
     /// 2
     /// The normal points out of the screen.
     /// (https://www.gamers.org/dEngine/quake/QDP/qmapspec.html)
-    pub points: [Vec3; 3],
+    pub points: [DVec3; 3],
     pub texture: String,
     pub u: UvAxis,
     pub v: UvAxis,
@@ -18,13 +18,13 @@ pub struct BrushFace {
     pub x_scale: f32,
     pub y_scale: f32,
 
-    pub normal: Vec3,
-    pub origin_dist: f32,
+    pub normal: DVec3,
+    pub origin_dist: f64,
 }
 
 impl BrushFace {
     pub fn new(
-        points: [Vec3; 3],
+        points: [DVec3; 3],
         texture: String,
         u: UvAxis,
         v: UvAxis,
@@ -50,38 +50,38 @@ impl BrushFace {
         }
     }
 
-    pub fn intersect_faces(&self, f2: &BrushFace, f3: &BrushFace) -> Option<Vec3> {
+    pub fn intersect_faces(&self, f2: &BrushFace, f3: &BrushFace) -> Option<DVec3> {
         // https://math.stackexchange.com/a/3734749 (IDK how this works)
         let determinant = self.normal.dot(f2.normal.cross(f3.normal));
 
-        if determinant.abs() < crate::EPSILON {
+        if determinant.abs() < crate::EPSILON_64 {
             return None;
         }
 
         // https://mathworld.wolfram.com/Plane-PlaneIntersection.html
-        Some(
-            (self.origin_dist * (f2.normal.cross(f3.normal))
-                + f2.origin_dist * (f3.normal.cross(self.normal))
-                + f3.origin_dist * (self.normal.cross(f2.normal)))
-                / determinant,
-        )
+        let intersection = (self.origin_dist * (f2.normal.cross(f3.normal))
+            + f2.origin_dist * (f3.normal.cross(self.normal))
+            + f3.origin_dist * (self.normal.cross(f2.normal)))
+            / determinant;
+
+        Some(intersection)
     }
 
-    pub fn tangent(&self) -> Vec4 {
+    pub fn tangent(&self) -> DVec4 {
         // u: tangent, v: bitangent
         // cross(normal, u) * w = v
         // -> w = sign(dot(cross(normal, u), v))
         let u = self.u.axis;
         let w = (self.normal.cross(u).dot(self.v.axis)).signum();
 
-        Vec4::new(u.x, u.y, u.z, w)
+        DVec4::new(u.x, u.y, u.z, w)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::test_utils::get_brush;
-    use glam::Vec3;
+    use glam::DVec3;
 
     #[test]
     fn test_intersect_faces() {
@@ -91,7 +91,7 @@ mod tests {
             .intersect_faces(&brush.faces[1], &brush.faces[2])
             .expect("failed to find intersect");
 
-        assert!(intersect.abs_diff_eq(Vec3::new(-16.0, -16.0, -16.0), crate::EPSILON))
+        assert!(intersect.abs_diff_eq(DVec3::new(-16.0, -16.0, -16.0), crate::EPSILON_64))
     }
 
     #[test]
@@ -102,7 +102,7 @@ mod tests {
         let tangent = face.tangent();
 
         assert!(
-            (face.normal.cross(face.u.axis) * tangent.w).abs_diff_eq(face.v.axis, crate::EPSILON)
+            (face.normal.cross(face.u.axis) * tangent.w).abs_diff_eq(face.v.axis, crate::EPSILON_64)
         );
     }
 }
