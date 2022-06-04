@@ -8,11 +8,14 @@ extern crate heron;
 extern crate nom;
 extern crate serde;
 extern crate serde_json;
+#[macro_use]
+extern crate async_trait;
 
 pub mod data;
 pub mod game_config;
 pub mod parsing;
 
 mod loader;
+pub use loader::*;
 
 mod test_utils;

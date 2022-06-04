@@ -7,12 +7,15 @@ edition = "2021"
 
 # bevy
 bevy = "0.7"
-heron = { version = "3.0", features = ["3d"] }
+anyhow = "1.0"
+heron = { version = "3.1", features = ["3d"] }
 
 # serde
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # other
+async-trait = "0.1"
+thiserror = "1.0"
 nom = "7.1"
 glam = { version = "0.20", features = ["serde"] }
