@@ -37,11 +37,11 @@ pub struct BrushAssetInfo {
 /// UVs are unscaled too, as textures are not loaded at this stage.
 #[derive(Debug, Default)]
 pub struct BrushMeshInfo {
-    pub vertices: Vec<Vec3>,
-    pub indices: Vec<usize>,
-    pub normals: Vec<Vec3>,
-    pub uvs: Vec<Vec2>,
-    pub tangents: Vec<Vec4>,
+    vertices: Vec<Vec3>,
+    indices: Vec<usize>,
+    normals: Vec<Vec3>,
+    uvs: Vec<Vec2>,
+    tangents: Vec<Vec4>,
 }
 
 impl BrushMeshInfo {
