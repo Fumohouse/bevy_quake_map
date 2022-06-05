@@ -1,3 +1,4 @@
+use super::utils::{map_to_bevy_space3, map_to_bevy_space4};
 use crate::data::BrushFace;
 use bevy::{
     pbr::StandardMaterial,
@@ -8,8 +9,6 @@ use bevy::{
 use glam::{Vec2, Vec3, Vec4};
 use heron::CollisionShape;
 use std::collections::HashMap;
-
-use super::utils::{map_to_bevy_space3, map_to_bevy_space4};
 
 #[derive(Debug, TypeUuid)]
 #[uuid = "c5943707-94a1-4b64-b6e3-6c38d930ae6c"]

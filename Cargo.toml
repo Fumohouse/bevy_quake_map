@@ -1,10 +1,15 @@
 [package]
-name = "quake_map"
+name = "bevy_quake_map"
 version = "0.1.0"
 edition = "2021"
+description = "Quake .map support for the Bevy game engine"
+readme = "README.md"
+repository = "https://github.com/kyoseki/bevy_quake_map/"
+categories = ["game-development"]
+keywords = ["bevy", "gamedev", "quake", "map"]
+exclude = ["assets/"]
 
 [dependencies]
-
 # bevy
 bevy = "0.7"
 anyhow = "1.0"
@@ -19,3 +24,11 @@ async-trait = "0.1"
 thiserror = "1.0"
 nom = "7.1"
 glam = { version = "0.20", features = ["serde"] }
+
+[dev-dependencies]
+bevy_flycam = "0.7"
+bevy-inspector-egui = "0.11"
+
+[[example]]
+name = "basic"
+path = "examples/basic.rs"

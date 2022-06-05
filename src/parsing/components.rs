@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use glam::{Vec3, DVec3};
+use glam::DVec3;
 use nom::{
     character::complete::{char, multispace0, multispace1},
     combinator::map,
@@ -126,7 +126,7 @@ pub fn entity<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 mod tests {
     use super::{brush, brush_face, entity, point, uv_axis};
     use crate::data::{Brush, BrushFace, Entity, UvAxis};
-    use glam::{DVec3, Vec3};
+    use glam::DVec3;
     use std::collections::HashMap;
 
     fn test_brush_face(i: f32) -> BrushFace {
