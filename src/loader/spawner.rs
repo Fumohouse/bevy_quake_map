@@ -31,9 +31,9 @@ impl MapSpawner {
             map_entity.insert_bundle(TransformBundle::identity());
 
             map_entity.with_children(|parent| {
-                let mut ecs_entity = parent.spawn_bundle(TransformBundle::identity());
-
                 for entity in &map.entities {
+                    let mut ecs_entity = parent.spawn_bundle(TransformBundle::identity());
+
                     ecs_entity.with_children(|parent| {
                         for brush in &entity.brushes {
                             let mut ecs_brush =
