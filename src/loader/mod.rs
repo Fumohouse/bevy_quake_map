@@ -73,9 +73,9 @@ pub trait MapAssetProvider: Send + Sync {
     /// Will only be called once per `tex_name`.
     async fn get_material<'a>(
         &self,
-        tex_name: &str,
-        load_context: &'a mut LoadContext,
-        default_tex: &Image,
+        _tex_name: &str,
+        _load_context: &'a mut LoadContext,
+        _default_tex: &Image,
     ) -> Option<StandardMaterial> {
         None
     }
