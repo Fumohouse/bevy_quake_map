@@ -1,16 +1,16 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct FaceAttribsConfig {
+pub struct FaceAttributes {
     #[serde(rename = "surfaceflags")]
-    pub surface_flags: Vec<FlagConfig>,
+    pub surface_flags: Vec<FaceFlag>,
     #[serde(rename = "contentflags")]
-    pub content_flags: Vec<FlagConfig>,
+    pub content_flags: Vec<FaceFlag>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(untagged)]
-pub enum FlagConfig {
+pub enum FaceFlag {
     Unused {
         unused: bool,
     },
@@ -19,12 +19,12 @@ pub enum FlagConfig {
         #[serde(skip_serializing_if = "Option::is_none")]
         description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        defaults: Option<BrushFaceAttributes>,
+        defaults: Option<FaceAttributeDefaults>,
     },
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct BrushFaceAttributes {
+pub struct FaceAttributeDefaults {
     pub offset: Option<[f32; 2]>,
     pub scale: Option<[f32; 2]>,
     pub rotation: Option<f32>,

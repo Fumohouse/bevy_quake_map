@@ -1,17 +1,17 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct EntityConfig {
+pub struct EntitySettings {
     pub definitions: Vec<String>,
     #[serde(rename = "defaultcolor")]
     pub default_color: String,
     #[serde(rename = "modelformats")]
-    pub model_formats: Vec<EntityModelFormat>,
+    pub model_formats: Vec<ModelFormat>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "lowercase")]
-pub enum EntityModelFormat {
+pub enum ModelFormat {
     Mdl,
     Md2,
     Md3,

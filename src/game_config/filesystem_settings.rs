@@ -1,20 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-use super::PackageFormatConfig;
+use super::PackageFormatSettings;
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct FileSystemConfig {
+pub struct FilesystemSettings {
     #[serde(rename = "searchpath")]
     pub search_path: String,
     #[serde(rename = "packageformat")]
-    pub package_format: PackageFormatConfig<PackageFormat>,
+    pub package_format: PackageFormatSettings<PackageFormat>,
 }
 
-impl Default for FileSystemConfig {
+impl Default for FilesystemSettings {
     fn default() -> Self {
-        FileSystemConfig {
+        FilesystemSettings {
             search_path: ".".to_string(),
-            package_format: PackageFormatConfig::<PackageFormat>::Extension {
+            package_format: PackageFormatSettings::<PackageFormat>::Extension {
                 extension: "pak".to_string(),
                 format: PackageFormat::IdPak,
             },

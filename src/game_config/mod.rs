@@ -1,6 +1,5 @@
 //! Structs and enums for TrenchBroom game configuration files
 //! https://trenchbroom.github.io/manual/latest/#game_configuration_files
-//! Names of some structs are borrowed from TrenchBroom source, which is GPLv3.
 
 use serde::{Deserialize, Serialize};
 
@@ -21,13 +20,13 @@ pub struct GameConfig {
     pub version: u32,
     pub name: String,
     #[serde(rename = "fileformats")]
-    pub file_formats: Vec<MapFormatConfig>,
-    pub filesystem: FileSystemConfig,
-    pub textures: TextureConfig,
-    pub entities: EntityConfig,
+    pub file_formats: Vec<MapFormatSettings>,
+    pub filesystem: FilesystemSettings,
+    pub textures: TextureSettings,
+    pub entities: EntitySettings,
     pub tags: Tags,
     #[serde(rename = "faceattribs")]
-    pub face_attribs: FaceAttribsConfig,
+    pub face_attribs: FaceAttributes,
     #[serde(rename = "softMapBounds", skip_serializing_if = "Option::is_none")]
     pub soft_map_bounds: Option<String>,
     #[serde(rename = "compilationTools", skip_serializing_if = "Option::is_none")]
@@ -39,22 +38,22 @@ impl Default for GameConfig {
         GameConfig {
             version: 4,
             name: "A Quake Map".to_string(),
-            file_formats: vec![MapFormatConfig {
+            file_formats: vec![MapFormatSettings {
                 format: MapFormat::Valve,
                 initial_map: Some("initial_valve.map".to_string()),
             }],
-            filesystem: FileSystemConfig::default(),
-            textures: TextureConfig::default(),
-            entities: EntityConfig {
+            filesystem: FilesystemSettings::default(),
+            textures: TextureSettings::default(),
+            entities: EntitySettings {
                 definitions: Vec::new(),
                 default_color: "0.6 0.6 0.6 1.0".to_string(),
-                model_formats: vec![EntityModelFormat::Obj],
+                model_formats: vec![ModelFormat::Obj],
             },
             tags: Tags {
                 brush: Vec::new(),
                 brush_face: Vec::new(),
             },
-            face_attribs: FaceAttribsConfig {
+            face_attribs: FaceAttributes {
                 surface_flags: Vec::new(),
                 content_flags: Vec::new(),
             },
@@ -66,13 +65,13 @@ impl Default for GameConfig {
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(untagged)]
-pub enum PackageFormatConfig<T> {
+pub enum PackageFormatSettings<T> {
     Extension { extension: String, format: T },
     Extensions { extensions: Vec<String>, format: T },
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct MapFormatConfig {
+pub struct MapFormatSettings {
     pub format: MapFormat,
     #[serde(rename = "initialmap", skip_serializing_if = "Option::is_none")]
     pub initial_map: Option<String>,
