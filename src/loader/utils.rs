@@ -1,13 +1,8 @@
 use glam::{Vec2, Vec3, Vec4};
-use heron::rapier_plugin::nalgebra::{OPoint, Const};
 use std::cmp::Ordering;
 
 pub fn map_to_bevy_space3(v: &Vec3) -> [f32; 3] {
     [v.y, v.z, v.x]
-}
-
-pub fn map_to_rapier(v: &Vec3) -> OPoint<f32, Const<3>> {
-    OPoint::<f32, Const<3>>::new(v.y, v.z, v.x)
 }
 
 pub fn map_to_bevy_space4(v: &Vec4) -> [f32; 4] {

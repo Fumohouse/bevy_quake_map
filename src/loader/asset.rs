@@ -1,36 +1,10 @@
 use super::utils::{map_to_bevy_space3, map_to_bevy_space4};
 use crate::data::BrushFace;
 use bevy::{
-    pbr::StandardMaterial,
-    prelude::{Handle, Mesh},
-    reflect::TypeUuid,
+    prelude::Mesh,
     render::mesh::{Indices, PrimitiveTopology},
 };
 use glam::{Vec2, Vec3, Vec4};
-use heron::CollisionShape;
-use std::collections::HashMap;
-
-#[derive(Debug, TypeUuid)]
-#[uuid = "c5943707-94a1-4b64-b6e3-6c38d930ae6c"]
-pub struct MapAsset {
-    pub(crate) entities: Vec<EntityAssetInfo>,
-}
-
-/// An entity as represented in a Map asset.
-#[derive(Debug)]
-pub struct EntityAssetInfo {
-    pub(crate) properties: HashMap<String, String>,
-    pub(crate) brushes: Vec<BrushAssetInfo>,
-}
-
-/// A brush as represented in a Map asset.
-/// Everything is unscaled and in .map coordinate space.
-#[derive(Debug)]
-pub struct BrushAssetInfo {
-    pub(crate) position: Vec3,
-    pub(crate) collider: CollisionShape,
-    pub(crate) meshes: HashMap<String, (Handle<Mesh>, Handle<StandardMaterial>)>,
-}
 
 /// Representation of one mesh in a Brush, which is associated with a particular material.
 /// Coordinates are in .map space, and are not transformed until conversion to Mesh.

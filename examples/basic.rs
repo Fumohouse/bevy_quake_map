@@ -12,8 +12,8 @@ use bevy::{
 };
 use bevy_flycam::PlayerPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
-use bevy_quake_map::{asset::MapAsset, load_map, spawner::MapSpawner, MapAssetProvider, MapPlugin};
-use heron::{CollisionShape, Gravity, PhysicsPlugin, RigidBody};
+use bevy_quake_map::{load_map, MapAssetProvider, MapPlugin};
+use bevy_rapier3d::prelude::*;
 use std::sync::Arc;
 
 struct FileAssetProvider;
@@ -108,8 +108,7 @@ impl AssetLoader for MapLoader {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(PhysicsPlugin::default())
-        .insert_resource(Gravity::from(Vec3::new(0.0, -10.0, 0.0)))
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(PlayerPlugin)
         .add_plugin(MapPlugin)
@@ -118,12 +117,7 @@ fn main() {
         .run();
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut map_spawner: ResMut<MapSpawner>,
-    mut meshes: ResMut<Assets<Mesh>>,
-) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut meshes: ResMut<Assets<Mesh>>) {
     asset_server.watch_for_changes().unwrap();
 
     commands
@@ -133,10 +127,7 @@ fn setup(
             ..default()
         })
         .insert(RigidBody::Dynamic)
-        .insert(CollisionShape::Cuboid {
-            half_extends: Vec3::new(0.5, 0.5, 0.5),
-            border_radius: None,
-        });
+        .insert(Collider::cuboid(0.5, 0.5, 0.5));
 
     const HALF_SIZE: f32 = 10.0;
     commands.spawn_bundle(DirectionalLightBundle {
@@ -157,6 +148,6 @@ fn setup(
         ..default()
     });
 
-    let handle = asset_server.load::<MapAsset, _>("test.map");
-    map_spawner.spawn(handle);
+    let handle = asset_server.load("test.map");
+    commands.spawn_scene(handle);
 }

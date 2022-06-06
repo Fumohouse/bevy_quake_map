@@ -1,4 +1,4 @@
-use crate::{data::Brush, parsing::parse_map};
+use crate::{data::Brush as BrushData, parsing::parse_map};
 use anyhow::Result as AResult;
 use bevy::{
     asset::{LoadContext, LoadedAsset},
@@ -8,22 +8,16 @@ use bevy::{
         texture::CompressedImageFormats,
     },
 };
+use bevy_rapier3d::prelude::{Collider, RigidBody};
 use glam::Vec3Swizzles;
-use heron::{
-    rapier_plugin::rapier3d::prelude::ColliderBuilder, CollisionShape, CustomCollisionShape,
-};
 use nom::error::Error as NomError;
 use std::{collections::HashMap, str::Utf8Error, sync::Arc};
 use thiserror::Error;
 
 mod utils;
-use utils::map_to_rapier;
 
 pub mod asset;
 use asset::*;
-
-pub mod spawner;
-use spawner::MapSpawner;
 
 const SCALE: f32 = 1.0 / 16.0;
 const EMPTY_TEX: &str = "__TB_empty";
@@ -33,9 +27,18 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_asset::<MapAsset>()
-            .init_resource::<MapSpawner>()
-            .add_system(MapSpawner::system.exclusive_system());
+        app.register_type::<Brush>().add_system(spawn_map_colliders);
+    }
+}
+
+pub fn spawn_map_colliders(
+    mut commands: Commands,
+    query: Query<(Entity, &Brush), Without<Collider>>,
+) {
+    for (entity, brush) in query.iter() {
+        commands
+            .entity(entity)
+            .insert(Collider::convex_hull(&brush.all_vertices).unwrap());
     }
 }
 
@@ -161,16 +164,23 @@ async fn load_material<'b>(
     loaded_materials[tex_name].clone()
 }
 
+#[derive(Component, Default, Reflect)]
+#[reflect(Component)]
+pub struct Brush {
+    pub(crate) all_vertices: Vec<Vec3>,
+}
+
 async fn load_brush<'a, 'b>(
     entity_idx: usize,
     brush_idx: usize,
-    brush: &'b Brush,
+    brush: &'b BrushData,
+    world: &mut World,
     load_context: &mut LoadContext<'_>,
     asset_provider: &Arc<dyn MapAssetProvider>,
     supported_compressed_formats: CompressedImageFormats,
     loaded_textures: &'a mut HashMap<&'b str, Image>,
     loaded_materials: &'a mut HashMap<&'b str, Handle<StandardMaterial>>,
-) -> AResult<BrushAssetInfo, MapError> {
+) -> AResult<Entity, MapError> {
     let mut mesh_infos: HashMap<&str, _> = HashMap::new();
     let mut all_vertices = Vec::new();
 
@@ -216,7 +226,7 @@ async fn load_brush<'a, 'b>(
 
     let centroid = all_vertices.iter().sum::<Vec3>() / (all_vertices.len() as f32);
 
-    let mut meshes = HashMap::new();
+    let mut ecs_meshes = Vec::new();
 
     for (tex_name, mesh_info) in mesh_infos {
         let texture = load_texture(
@@ -243,26 +253,36 @@ async fn load_brush<'a, 'b>(
         )
         .await;
 
-        meshes.insert(tex_name.to_string(), (mesh_handle, material_handle));
+        let ecs_mesh = world
+            .spawn()
+            .insert_bundle(PbrBundle {
+                mesh: mesh_handle,
+                material: material_handle,
+                ..default()
+            })
+            .id();
+
+        ecs_meshes.push(ecs_mesh);
     }
 
-    let all_vertices_transformed: Vec<_> = all_vertices
+    let all_vertices_transformed = all_vertices
         .iter()
-        .map(|v| (*v - centroid) * SCALE)
-        .map(|v| map_to_rapier(&v))
-        .collect();
+        .map(|v| ((*v - centroid) * SCALE).yzx())
+        .collect::<Vec<_>>();
 
-    let collider = CollisionShape::Custom {
-        shape: CustomCollisionShape::new(
-            ColliderBuilder::convex_hull(&all_vertices_transformed).unwrap(),
-        ),
-    };
+    let ecs_brush = world
+        .spawn()
+        .insert_bundle(TransformBundle::from(Transform::from_translation(
+            (centroid * SCALE).yzx(),
+        )))
+        .insert(Brush {
+            all_vertices: all_vertices_transformed,
+        })
+        .insert(RigidBody::Fixed)
+        .push_children(&ecs_meshes)
+        .id();
 
-    Ok(BrushAssetInfo {
-        position: (centroid * SCALE).yzx(),
-        collider,
-        meshes,
-    })
+    Ok(ecs_brush)
 }
 
 pub async fn load_map<'a>(
@@ -270,7 +290,7 @@ pub async fn load_map<'a>(
     load_context: &'a mut LoadContext<'_>,
     supported_compressed_formats: CompressedImageFormats,
     asset_provider: Arc<dyn MapAssetProvider>,
-) -> AResult<LoadedAsset<MapAsset>, MapError> {
+) -> AResult<LoadedAsset<Scene>, MapError> {
     let map_text = std::str::from_utf8(bytes)?;
     let map = parse_map::<NomError<&str>>(map_text)
         .map_err(|_| MapError::ParseError)?
@@ -279,34 +299,45 @@ pub async fn load_map<'a>(
     let mut loaded_textures = HashMap::new();
     let mut loaded_materials = HashMap::new();
 
-    let mut entities = Vec::new();
+    let mut world = World::new();
+
+    let mut ecs_entities = Vec::new();
 
     for (entity_idx, entity) in map.entities.iter().enumerate() {
-        let mut brushes = Vec::new();
+        let mut ecs_brushes = Vec::new();
 
         for (brush_idx, brush) in entity.brushes.iter().enumerate() {
-            brushes.push(
-                load_brush(
-                    entity_idx,
-                    brush_idx,
-                    brush,
-                    load_context,
-                    &asset_provider,
-                    supported_compressed_formats,
-                    &mut loaded_textures,
-                    &mut loaded_materials,
-                )
-                .await?,
-            );
+            let entity = load_brush(
+                entity_idx,
+                brush_idx,
+                brush,
+                &mut world,
+                load_context,
+                &asset_provider,
+                supported_compressed_formats,
+                &mut loaded_textures,
+                &mut loaded_materials,
+            )
+            .await?;
+
+            ecs_brushes.push(entity);
         }
 
-        entities.push(EntityAssetInfo {
-            properties: entity.properties.clone(),
-            brushes,
-        });
+        let ecs_entity = world
+            .spawn()
+            .insert_bundle(TransformBundle::identity())
+            .push_children(&ecs_brushes)
+            .id();
+
+        ecs_entities.push(ecs_entity);
     }
 
-    Ok(LoadedAsset::new(MapAsset { entities }))
+    world
+        .spawn()
+        .insert_bundle(TransformBundle::identity())
+        .push_children(&ecs_entities);
+
+    Ok(LoadedAsset::new(Scene::new(world)))
 }
 
 fn mesh_label(entity_idx: usize, brush_idx: usize, tex_name: &str) -> String {
