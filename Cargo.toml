@@ -3,6 +3,7 @@ name = "bevy_quake_map"
 version = "0.1.0"
 edition = "2021"
 description = "Quake .map support for the Bevy game engine"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/kyoseki/bevy_quake_map/"
 categories = ["game-development"]
