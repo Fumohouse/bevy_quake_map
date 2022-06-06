@@ -133,7 +133,7 @@ mod tests {
 	"entities": {
 		"definitions": [ "Qodot.fgd", "Fumohouse.fgd" ],
 		"defaultcolor": "0.6 0.6 0.6 1.0",
-		"modelformats": [ "mdl", "md2", "md3", "bsp", "dkm", "obj_neverball" ]
+		"modelformats": [ "mdl", "md2", "md3", "bsp", "dkm", "obj" ]
 	},
 	"tags": {
 		"brush": [

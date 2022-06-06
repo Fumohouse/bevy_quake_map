@@ -17,6 +17,5 @@ pub enum ModelFormat {
     Md3,
     Bsp,
     Dkm,
-    #[serde(rename = "obj_neverball")]
     Obj,
 }
