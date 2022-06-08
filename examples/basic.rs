@@ -5,14 +5,11 @@ use anyhow::Result as AResult;
 use bevy::{
     asset::{AssetLoader, BoxedFuture, LoadContext},
     prelude::*,
-    render::{
-        renderer::RenderDevice,
-        texture::{CompressedImageFormats, ImageType},
-    },
+    render::texture::{CompressedImageFormats, ImageType},
 };
 use bevy_flycam::PlayerPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
-use bevy_quake_map::{load_map, MapAssetProvider, MapPlugin};
+use bevy_quake_map::{get_supported_compressed_formats, load_map, MapAssetProvider, MapPlugin};
 use bevy_rapier3d::prelude::*;
 use std::sync::Arc;
 
@@ -67,14 +64,9 @@ struct MapLoader {
 
 impl FromWorld for MapLoader {
     fn from_world(world: &mut World) -> Self {
-        let supported_compressed_formats = match world.get_resource::<RenderDevice>() {
-            Some(render_device) => CompressedImageFormats::from_features(render_device.features()),
-            None => CompressedImageFormats::all(),
-        };
-
         Self {
             asset_provider: Arc::new(FileAssetProvider),
-            supported_compressed_formats,
+            supported_compressed_formats: get_supported_compressed_formats(world),
         }
     }
 }

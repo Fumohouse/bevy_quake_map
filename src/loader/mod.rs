@@ -19,6 +19,9 @@ mod utils;
 pub mod asset;
 use asset::*;
 
+mod asset_provider;
+pub use asset_provider::*;
+
 const SCALE: f32 = 1.0 / 16.0;
 const EMPTY_TEX: &str = "__TB_empty";
 
@@ -42,45 +45,6 @@ pub fn spawn_map_colliders(
     }
 }
 
-#[async_trait]
-pub trait MapAssetProvider: Send + Sync {
-    async fn load_default_texture<'a>(
-        &self,
-        load_context: &'a mut LoadContext,
-        supported_compressed_formats: CompressedImageFormats,
-    ) -> AResult<Image>;
-
-    async fn load_missing_texture<'a>(
-        &self,
-        load_context: &'a mut LoadContext,
-        supported_compressed_formats: CompressedImageFormats,
-    ) -> AResult<Image> {
-        self.load_default_texture(load_context, supported_compressed_formats)
-            .await
-    }
-
-    /// Load a texture from the map assets.
-    /// Will only be called once per `tex_name`.
-    async fn load_texture<'a>(
-        &self,
-        load_context: &'a mut LoadContext,
-        supported_compressed_formats: CompressedImageFormats,
-        tex_name: &str,
-    ) -> Option<Image>;
-
-    /// Create a material from the information provided,
-    /// or use the default one if `None` is returned.
-    /// Will only be called once per `tex_name`.
-    async fn get_material<'a>(
-        &self,
-        _tex_name: &str,
-        _load_context: &'a mut LoadContext,
-        _default_tex: &Image,
-    ) -> Option<StandardMaterial> {
-        None
-    }
-}
-
 #[derive(Error, Debug)]
 pub enum MapError {
     #[error("can't load the default texture: {error}")]
@@ -91,6 +55,61 @@ pub enum MapError {
     Utf8Error(#[from] Utf8Error),
     #[error("failed to parse map")]
     ParseError,
+}
+
+pub async fn load_map<'a>(
+    bytes: &'a [u8],
+    load_context: &'a mut LoadContext<'_>,
+    supported_compressed_formats: CompressedImageFormats,
+    asset_provider: Arc<dyn MapAssetProvider>,
+) -> AResult<LoadedAsset<Scene>, MapError> {
+    let map_text = std::str::from_utf8(bytes)?;
+    let map = parse_map::<NomError<&str>>(map_text)
+        .map_err(|_| MapError::ParseError)?
+        .1;
+
+    let mut loaded_textures = HashMap::new();
+    let mut loaded_materials = HashMap::new();
+
+    let mut world = World::new();
+
+    let mut ecs_entities = Vec::new();
+
+    for (entity_idx, entity) in map.entities.iter().enumerate() {
+        let mut ecs_brushes = Vec::new();
+
+        for (brush_idx, brush) in entity.brushes.iter().enumerate() {
+            let entity = load_brush(
+                entity_idx,
+                brush_idx,
+                brush,
+                &mut world,
+                load_context,
+                &asset_provider,
+                supported_compressed_formats,
+                &mut loaded_textures,
+                &mut loaded_materials,
+            )
+            .await?;
+
+            ecs_brushes.push(entity);
+        }
+
+        let ecs_entity = world
+            .spawn()
+            .insert_bundle(TransformBundle::identity())
+            .push_children(&ecs_brushes)
+            .id();
+
+        ecs_entities.push(ecs_entity);
+    }
+
+    world
+        .spawn()
+        .insert_bundle(TransformBundle::identity())
+        .push_children(&ecs_entities);
+
+    Ok(LoadedAsset::new(Scene::new(world)))
 }
 
 async fn load_texture<'a, 'b>(
@@ -283,61 +302,6 @@ async fn load_brush<'a, 'b>(
         .id();
 
     Ok(ecs_brush)
-}
-
-pub async fn load_map<'a>(
-    bytes: &'a [u8],
-    load_context: &'a mut LoadContext<'_>,
-    supported_compressed_formats: CompressedImageFormats,
-    asset_provider: Arc<dyn MapAssetProvider>,
-) -> AResult<LoadedAsset<Scene>, MapError> {
-    let map_text = std::str::from_utf8(bytes)?;
-    let map = parse_map::<NomError<&str>>(map_text)
-        .map_err(|_| MapError::ParseError)?
-        .1;
-
-    let mut loaded_textures = HashMap::new();
-    let mut loaded_materials = HashMap::new();
-
-    let mut world = World::new();
-
-    let mut ecs_entities = Vec::new();
-
-    for (entity_idx, entity) in map.entities.iter().enumerate() {
-        let mut ecs_brushes = Vec::new();
-
-        for (brush_idx, brush) in entity.brushes.iter().enumerate() {
-            let entity = load_brush(
-                entity_idx,
-                brush_idx,
-                brush,
-                &mut world,
-                load_context,
-                &asset_provider,
-                supported_compressed_formats,
-                &mut loaded_textures,
-                &mut loaded_materials,
-            )
-            .await?;
-
-            ecs_brushes.push(entity);
-        }
-
-        let ecs_entity = world
-            .spawn()
-            .insert_bundle(TransformBundle::identity())
-            .push_children(&ecs_brushes)
-            .id();
-
-        ecs_entities.push(ecs_entity);
-    }
-
-    world
-        .spawn()
-        .insert_bundle(TransformBundle::identity())
-        .push_children(&ecs_entities);
-
-    Ok(LoadedAsset::new(Scene::new(world)))
 }
 
 fn mesh_label(entity_idx: usize, brush_idx: usize, tex_name: &str) -> String {
