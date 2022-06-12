@@ -120,15 +120,13 @@ async fn load_texture<'a, 'b>(
     loaded_textures: &'a mut HashMap<&'b str, Image>,
 ) -> AResult<&'a Image, MapError> {
     if !loaded_textures.contains_key(tex_name) {
-        let mut new_tex;
-
-        if tex_name == EMPTY_TEX {
-            new_tex = asset_provider
+        let mut new_tex = if tex_name == EMPTY_TEX {
+            asset_provider
                 .load_default_texture(load_context, supported_compressed_formats)
                 .await
-                .map_err(|error| MapError::DefaultTextureLoadFailed { error })?;
+                .map_err(|error| MapError::DefaultTextureLoadFailed { error })?
         } else {
-            new_tex = match asset_provider
+            match asset_provider
                 .load_texture(load_context, supported_compressed_formats, tex_name)
                 .await
             {
@@ -137,8 +135,8 @@ async fn load_texture<'a, 'b>(
                     .load_missing_texture(load_context, supported_compressed_formats)
                     .await
                     .map_err(|error| MapError::MissingTextureLoadFailed { error })?,
-            };
-        }
+            }
+        };
 
         new_tex.sampler_descriptor = SamplerDescriptor {
             address_mode_u: AddressMode::Repeat,
@@ -189,6 +187,7 @@ pub struct Brush {
     pub(crate) all_vertices: Vec<Vec3>,
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn load_brush<'a, 'b>(
     entity_idx: usize,
     brush_idx: usize,
@@ -238,7 +237,7 @@ async fn load_brush<'a, 'b>(
 
         let entry = mesh_infos
             .entry(&face.texture)
-            .or_insert_with(|| BrushMeshInfo::default());
+            .or_insert_with(BrushMeshInfo::default);
 
         entry.push_vertices(face, &face_vertices);
     }

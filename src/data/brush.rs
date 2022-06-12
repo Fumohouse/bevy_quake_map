@@ -15,7 +15,7 @@ impl Brush {
             }
         }
 
-        return true;
+        true
     }
 }
 
