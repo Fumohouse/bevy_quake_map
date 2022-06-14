@@ -8,7 +8,7 @@ use nom::{
     combinator::map,
     error::{context, ContextError, ParseError},
     multi::{count, many0, many1},
-    number::complete::{float, double},
+    number::complete::{double, float},
     sequence::{delimited, pair, preceded, terminated, tuple},
     IResult,
 };
@@ -22,9 +22,10 @@ fn point<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 ) -> IResult<&'a str, DVec3, E> {
     context(
         "point",
-        map(delimited(char('('), generic_list(3, double), char(')')), |v| {
-            DVec3::new(v[0], v[1], v[2])
-        }),
+        map(
+            delimited(char('('), generic_list(3, double), char(')')),
+            |v| DVec3::new(v[0], v[1], v[2]),
+        ),
     )(i)
 }
 
@@ -34,10 +35,13 @@ fn uv_axis<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 ) -> IResult<&'a str, UvAxis, E> {
     context(
         "uv_axis",
-        map(delimited(char('['), generic_list(4, double), char(']')), |v| UvAxis {
-            axis: DVec3::new(v[0], v[1], v[2]),
-            offset: v[3],
-        }),
+        map(
+            delimited(char('['), generic_list(4, double), char(']')),
+            |v| UvAxis {
+                axis: DVec3::new(v[0], v[1], v[2]),
+                offset: v[3],
+            },
+        ),
     )(i)
 }
 

@@ -32,7 +32,7 @@ pub fn ignored<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, (), E
 /// Parses a whitespace-separated list of floats, of a specific length
 pub fn generic_list<'a, T, E: ParseError<&'a str>>(
     n: usize,
-    parser: fn(&'a str) -> IResult<&'a str, T, E>
+    parser: fn(&'a str) -> IResult<&'a str, T, E>,
 ) -> impl FnMut(&'a str) -> IResult<&'a str, Vec<T>, E> {
     move |i| {
         verify(

@@ -31,8 +31,8 @@ pub fn parse_map<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 
 #[cfg(test)]
 mod tests {
-    use crate::test_utils;
     use super::parse_map;
+    use crate::test_utils;
 
     #[test]
     fn test_parse_map() {

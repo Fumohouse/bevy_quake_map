@@ -101,8 +101,7 @@ mod tests {
 
         let tangent = face.tangent();
 
-        assert!(
-            (face.normal.cross(face.u.axis) * tangent.w).abs_diff_eq(face.v.axis, crate::EPSILON_64)
-        );
+        assert!((face.normal.cross(face.u.axis) * tangent.w)
+            .abs_diff_eq(face.v.axis, crate::EPSILON_64));
     }
 }
