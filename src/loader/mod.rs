@@ -22,7 +22,9 @@ use asset::*;
 mod asset_provider;
 pub use asset_provider::*;
 
-const SCALE: f32 = 1.0 / 16.0;
+/// Scale is based on default TrenchBroom obj scale,
+/// which is 64 .map units to 1 obj unit
+const SCALE: f32 = 1.0 / 64.0;
 const EMPTY_TEX: &str = "__TB_empty";
 
 #[derive(Default)]
