@@ -1,61 +1,16 @@
-#[macro_use]
-extern crate async_trait;
-
 use anyhow::Result as AResult;
 use bevy::{
-    asset::{AssetLoader, BoxedFuture, LoadContext},
+    asset::{AssetLoader, BoxedFuture},
     prelude::*,
-    render::texture::{CompressedImageFormats, ImageType},
+    render::texture::CompressedImageFormats,
 };
 use bevy_flycam::PlayerPlugin;
 use bevy_inspector_egui::WorldInspectorPlugin;
-use bevy_quake_map::{get_supported_compressed_formats, load_map, MapAssetProvider, MapPlugin};
+use bevy_quake_map::{
+    get_supported_compressed_formats, load_map, FileAssetProvider, MapAssetProvider, MapPlugin,
+};
 use bevy_rapier3d::prelude::*;
 use std::sync::Arc;
-
-struct FileAssetProvider;
-
-#[async_trait]
-impl MapAssetProvider for FileAssetProvider {
-    async fn load_default_texture<'a>(
-        &self,
-        load_context: &'a mut LoadContext,
-        supported_compressed_formats: CompressedImageFormats,
-    ) -> AResult<Image> {
-        let buf = load_context
-            .read_asset_bytes("textures/default.png")
-            .await?;
-
-        Ok(Image::from_buffer(
-            &buf,
-            ImageType::MimeType("image/png"),
-            supported_compressed_formats,
-            true,
-        )?)
-    }
-
-    async fn load_texture<'a>(
-        &self,
-        load_context: &'a mut LoadContext,
-        supported_compressed_formats: CompressedImageFormats,
-        tex_name: &str,
-    ) -> Option<Image> {
-        let buf = load_context
-            .read_asset_bytes(format!("textures/{}.png", tex_name))
-            .await
-            .ok()?;
-
-        Some(
-            Image::from_buffer(
-                &buf,
-                ImageType::MimeType("image/png"),
-                supported_compressed_formats,
-                true,
-            )
-            .ok()?,
-        )
-    }
-}
 
 struct MapLoader {
     asset_provider: Arc<dyn MapAssetProvider>,
@@ -65,7 +20,7 @@ struct MapLoader {
 impl FromWorld for MapLoader {
     fn from_world(world: &mut World) -> Self {
         Self {
-            asset_provider: Arc::new(FileAssetProvider),
+            asset_provider: Arc::new(FileAssetProvider::from_world(world)),
             supported_compressed_formats: get_supported_compressed_formats(world),
         }
     }

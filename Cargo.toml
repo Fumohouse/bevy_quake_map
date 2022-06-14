@@ -27,6 +27,7 @@ nom = "7.1"
 glam = { version = "0.20", features = ["serde"] }
 
 [dev-dependencies]
+bevy = { version = "0.7", features = ["jpeg"] }
 bevy_flycam = "0.7"
 bevy-inspector-egui = "0.11"
 

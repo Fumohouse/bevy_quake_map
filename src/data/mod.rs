@@ -23,3 +23,15 @@ pub struct Entity {
 pub struct Map {
     pub entities: Vec<Entity>,
 }
+
+impl Map {
+    pub fn worldspawn(&self) -> Option<&Entity> {
+        self.entities.iter().find(|e| {
+            if let Some("worldspawn") = e.properties.get("classname").map(|prop| prop.as_str()) {
+                return true;
+            }
+
+            false
+        })
+    }
+}

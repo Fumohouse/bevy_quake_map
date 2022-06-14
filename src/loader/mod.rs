@@ -25,6 +25,7 @@ pub use asset_provider::*;
 /// Scale is based on default TrenchBroom obj scale,
 /// which is 64 .map units to 1 obj unit
 const SCALE: f32 = 1.0 / 64.0;
+const TEX_COLLECTIONS_PROP: &str = "_tb_textures";
 const EMPTY_TEX: &str = "__TB_empty";
 
 #[derive(Default)]
@@ -57,6 +58,8 @@ pub enum MapError {
     Utf8Error(#[from] Utf8Error),
     #[error("failed to parse map")]
     ParseError,
+    #[error("map does not have a worldspawn entity")]
+    MissingWorldspawn,
 }
 
 pub async fn load_map<'a>(
@@ -69,6 +72,12 @@ pub async fn load_map<'a>(
     let map = parse_map::<NomError<&str>>(map_text)
         .map_err(|_| MapError::ParseError)?
         .1;
+
+    let worldspawn = map.worldspawn().ok_or(MapError::MissingWorldspawn)?;
+    let texture_collections = worldspawn
+        .properties
+        .get(TEX_COLLECTIONS_PROP)
+        .map(|value| value.split(';').collect::<Vec<_>>());
 
     let mut loaded_textures = HashMap::new();
     let mut loaded_materials = HashMap::new();
@@ -89,6 +98,7 @@ pub async fn load_map<'a>(
                 load_context,
                 &asset_provider,
                 supported_compressed_formats,
+                texture_collections.as_ref().map(|c| c as &[&str]),
                 &mut loaded_textures,
                 &mut loaded_materials,
             )
@@ -119,22 +129,36 @@ async fn load_texture<'a, 'b>(
     load_context: &mut LoadContext<'_>,
     asset_provider: &Arc<dyn MapAssetProvider>,
     supported_compressed_formats: CompressedImageFormats,
+    texture_collections: Option<&[&str]>,
     loaded_textures: &'a mut HashMap<&'b str, Image>,
 ) -> AResult<&'a Image, MapError> {
     if !loaded_textures.contains_key(tex_name) {
         let mut new_tex = if tex_name == EMPTY_TEX {
             asset_provider
-                .load_default_texture(load_context, supported_compressed_formats)
+                .load_default_texture(
+                    load_context,
+                    texture_collections,
+                    supported_compressed_formats,
+                )
                 .await
                 .map_err(|error| MapError::DefaultTextureLoadFailed { error })?
         } else {
             match asset_provider
-                .load_texture(load_context, supported_compressed_formats, tex_name)
+                .load_texture(
+                    load_context,
+                    texture_collections,
+                    supported_compressed_formats,
+                    tex_name,
+                )
                 .await
             {
                 Some(tex) => tex,
                 None => asset_provider
-                    .load_missing_texture(load_context, supported_compressed_formats)
+                    .load_missing_texture(
+                        load_context,
+                        texture_collections,
+                        supported_compressed_formats,
+                    )
                     .await
                     .map_err(|error| MapError::MissingTextureLoadFailed { error })?,
             }
@@ -198,6 +222,7 @@ async fn load_brush<'a, 'b>(
     load_context: &mut LoadContext<'_>,
     asset_provider: &Arc<dyn MapAssetProvider>,
     supported_compressed_formats: CompressedImageFormats,
+    texture_collections: Option<&[&str]>,
     loaded_textures: &'a mut HashMap<&'b str, Image>,
     loaded_materials: &'a mut HashMap<&'b str, Handle<StandardMaterial>>,
 ) -> AResult<Entity, MapError> {
@@ -254,6 +279,7 @@ async fn load_brush<'a, 'b>(
             load_context,
             asset_provider,
             supported_compressed_formats,
+            texture_collections,
             loaded_textures,
         )
         .await?;
