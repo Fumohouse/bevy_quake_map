@@ -1,0 +1,20 @@
+@include base1
+@include base2
+
+@BaseClass color(255 255 255) = TestBase :
+    "Test base class\n" +
+    "Multiline description"
+[
+    test_prop(float) : "Test property" : 5 : "This is a test"
+]
+
+@PointClass base(TestBase) = test_point :
+    "Test point class"
+[
+    spawnflags(flags) =
+    [
+        1 : "Flag 1" : 1
+        2 : "Flag 2" : 0
+        4 : "Flag 3" : 1
+    ]
+]
