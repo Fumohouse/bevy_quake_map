@@ -2819,6 +2819,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f61dcf0b917cd75d4521d7343d1ffff3d1583054133c9b5cbea3375c703c40d"
 
 [[package]]
+name = "quake_map_project_manager"
+version = "0.1.0"
+
+[[package]]
 name = "quote"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"

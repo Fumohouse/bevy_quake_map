@@ -1,0 +1,6 @@
+[package]
+name = "quake_map_project_manager"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]

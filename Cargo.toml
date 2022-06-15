@@ -10,6 +10,9 @@ categories = ["game-development"]
 keywords = ["bevy", "gamedev", "quake", "map"]
 exclude = ["assets/"]
 
+[workspace]
+members = ["crates/*"]
+
 [dependencies]
 # bevy
 bevy = "0.7"
