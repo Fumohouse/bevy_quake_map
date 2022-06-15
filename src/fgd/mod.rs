@@ -1,5 +1,6 @@
 //! Simplified FGD representation.
 //! Some parts of specification missing.
+//! Reference: https://developer.valvesoftware.com/wiki/FGD
 
 use glam::{UVec3, Vec3};
 use serde::{Deserialize, Serialize};
