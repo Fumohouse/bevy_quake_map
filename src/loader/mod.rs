@@ -1,4 +1,4 @@
-use crate::{data::Brush as BrushData, parsing::parse_map};
+use crate::{map_data::Brush as BrushData, parsing::parse_map};
 use anyhow::Result as AResult;
 use bevy::{
     asset::{LoadContext, LoadedAsset},

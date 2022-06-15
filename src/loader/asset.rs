@@ -1,5 +1,5 @@
 use super::utils::{map_to_bevy_space3, map_to_bevy_space4};
-use crate::data::BrushFace;
+use crate::map_data::BrushFace;
 use bevy::{
     prelude::Mesh,
     render::mesh::{Indices, PrimitiveTopology},

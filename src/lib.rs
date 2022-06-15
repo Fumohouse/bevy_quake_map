@@ -7,7 +7,7 @@ pub const EPSILON_64: f64 = EPSILON as f64;
 #[macro_use]
 extern crate async_trait;
 
-pub mod data;
+pub mod map_data;
 pub mod game_config;
 pub mod parsing;
 

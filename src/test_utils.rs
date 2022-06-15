@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use crate::{
-    data::{Brush, Entity, Map},
+    map_data::{Brush, Entity, Map},
     parsing::parse_map,
 };
 

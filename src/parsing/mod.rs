@@ -9,7 +9,7 @@ use nom::{
     IResult,
 };
 
-use crate::data::Map;
+use crate::map_data::Map;
 
 pub mod components;
 use components::entity;
