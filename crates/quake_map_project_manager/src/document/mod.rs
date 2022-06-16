@@ -1,6 +1,6 @@
 use bevy::{prelude::*, reflect::TypeRegistryArc};
-use thiserror::Error;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use thiserror::Error;
 
 pub mod entity;
 
@@ -24,7 +24,10 @@ pub enum DocumentIoError {
 }
 
 pub trait EditorDocumentItem: Sized {
-    fn deserialize(serialized: &str, doc_context: &DocumentIoContext) -> Result<Self, DocumentIoError>;
+    fn deserialize(
+        serialized: &str,
+        doc_context: &DocumentIoContext,
+    ) -> Result<Self, DocumentIoError>;
     fn serialize(&self, doc_context: &DocumentIoContext) -> Result<String, DocumentIoError>;
 }
 
@@ -50,7 +53,10 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
         self.internal.write().unwrap()
     }
 
-    pub fn load(serialized: &str, doc_context: &DocumentIoContext) -> Result<Self, DocumentIoError> {
+    pub fn load(
+        serialized: &str,
+        doc_context: &DocumentIoContext,
+    ) -> Result<Self, DocumentIoError> {
         T::deserialize(serialized, doc_context).map(Self::new)
     }
 

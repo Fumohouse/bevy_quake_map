@@ -200,10 +200,7 @@ impl<'a, 'de> Visitor<'de> for OptionalSceneVisitor<'a> {
 mod tests {
     use super::EntityDefinition;
     use crate::document::{DocumentIoContext, EditorDocumentItem};
-    use bevy::{
-        ecs::entity::EntityMap,
-        prelude::*,
-    };
+    use bevy::{ecs::entity::EntityMap, prelude::*};
     use bevy_quake_map::fgd::{FgdClass, FgdClassType};
 
     #[derive(Default, Reflect, Component)]
@@ -217,8 +214,7 @@ mod tests {
     #[test]
     fn test_serde() {
         let mut app = App::new();
-        app.register_type::<TestComponent>()
-            .add_system(scene_setup);
+        app.register_type::<TestComponent>().add_system(scene_setup);
         app.update();
 
         let ctx = DocumentIoContext::from_world(&mut app.world);
