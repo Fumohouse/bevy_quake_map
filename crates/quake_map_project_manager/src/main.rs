@@ -19,6 +19,9 @@ use io::{EditorIo, EditorIoError, FileEditorIo};
 mod project;
 use project::EditorProject;
 
+mod document;
+use document::DocumentIoContext;
+
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum EditorState {
     Loading,
@@ -71,8 +74,11 @@ fn main() {
         .insert_resource(EditorProjectFolder(folder))
         .init_resource::<EditorContext>();
 
-    app.add_system_set(SystemSet::on_enter(EditorState::Loading).with_system(begin_load))
-        .add_system_set(SystemSet::on_update(EditorState::Loading).with_system(poll_load));
+    app.add_system_set(
+        SystemSet::on_enter(EditorState::Loading)
+            .with_system(begin_load.exclusive_system().at_start()),
+    )
+    .add_system_set(SystemSet::on_update(EditorState::Loading).with_system(poll_load));
 
     app.add_system_set(
         SystemSet::on_enter(EditorState::Saving)
@@ -86,14 +92,17 @@ fn main() {
     app.run();
 }
 
-fn begin_load(mut commands: Commands, editor_context: ResMut<EditorContext>) {
+fn begin_load(world: &mut World) {
+    let doc_context = DocumentIoContext::from_world(world);
+    let editor_context = world.resource::<EditorContext>();
+
     let io = editor_context.io.clone();
 
     let task = editor_context
         .task_pool
-        .spawn(async move { EditorProject::load(io.as_ref()) });
+        .spawn(async move { EditorProject::load(io.as_ref(), doc_context) });
 
-    commands.spawn().insert(task);
+    world.spawn().insert(task);
 }
 
 fn poll_load(

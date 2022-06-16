@@ -2993,6 +2993,7 @@ dependencies = [
  "futures-lite",
  "rfd",
  "ron",
+ "serde",
  "thiserror",
 ]
 

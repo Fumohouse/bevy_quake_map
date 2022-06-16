@@ -10,7 +10,7 @@ const TAB: &str = "    ";
 mod to_fgd_literal;
 pub use to_fgd_literal::*;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct FgdFile {
     pub name: String,
     pub includes: Vec<String>,
@@ -46,7 +46,7 @@ impl FgdFile {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct FgdClass {
     pub class_type: FgdClassType,
     pub name: String,
@@ -102,7 +102,7 @@ impl FgdClass {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum FgdClassType {
     Base,
     Point,
@@ -119,7 +119,7 @@ impl FgdClassType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum FgdClassProperty {
     Base(Vec<String>),
     Model(String),
@@ -141,7 +141,7 @@ impl FgdClassProperty {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum EntityProperty {
     String(EntityPropertyData<String>),
     Integer(EntityPropertyData<i32>),
@@ -177,7 +177,7 @@ impl EntityProperty {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct EntityPropertyData<T: ToFgdLiteral> {
     pub name: String,
     pub display_name: String,
@@ -198,7 +198,7 @@ impl<T: ToFgdLiteral> EntityPropertyData<T> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Choice {
     pub index: i32,
     pub name: String,
@@ -210,7 +210,7 @@ impl Choice {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct FlagsData {
     pub name: String,
     pub flags: Vec<Flag>,
@@ -232,7 +232,7 @@ impl FlagsData {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Flag {
     pub flag: i32,
     pub name: String,
