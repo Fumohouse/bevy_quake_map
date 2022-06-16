@@ -61,7 +61,12 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
     }
 
     pub fn save(&self, doc_context: &DocumentIoContext) -> Result<String, DocumentIoError> {
-        *self.modified.write().unwrap() = false;
-        self.read().serialize(doc_context)
+        let res = self.read().serialize(doc_context);
+
+        if res.is_ok() {
+            *self.modified.write().unwrap() = false;
+        }
+
+        res
     }
 }
