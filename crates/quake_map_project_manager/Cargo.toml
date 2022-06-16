@@ -4,3 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bevy = "0.7"
+bevy_egui = "0.14"
+bevy_quake_map = { path = "../../" }
+rfd = "0.9"
+dirs = "4.0"
+thiserror = "1.0"
+futures-lite = "1.11"
+ron = "0.7"
