@@ -3,7 +3,7 @@ use bevy::{prelude::*, reflect::TypeRegistryArc};
 use std::{
     path::Path,
     str::Utf8Error,
-    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
+    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard}, collections::HashMap, ops::Deref,
 };
 use thiserror::Error;
 
@@ -160,5 +160,49 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
         *self.state.write().unwrap() = DocumentState::New;
 
         Ok(())
+    }
+}
+
+pub struct DocumentCollection<T: EditorDocumentItem> {
+    internal: HashMap<String, EditorDocument<T>>,
+}
+
+impl<T: EditorDocumentItem> Default for DocumentCollection<T> {
+    fn default() -> Self {
+        Self { internal: HashMap::new() }
+    }
+}
+
+impl<T: EditorDocumentItem> Deref for DocumentCollection<T> {
+    type Target = HashMap<String, EditorDocument<T>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.internal
+    }
+}
+
+impl<T: EditorDocumentItem> DocumentCollection<T> {
+    pub fn get(&self, name: &str) -> Option<&EditorDocument<T>> {
+        self.internal.get(name)
+    }
+
+    pub fn contains(&self, name: &str) -> bool {
+        self.internal.contains_key(name)
+    }
+
+    pub fn remove(&mut self, name: &str) -> Option<EditorDocument<T>> {
+        self.internal.remove(name)
+    }
+
+    pub fn rename(&mut self, doc: &EditorDocument<T>, to: &str) {
+        let doc = self.internal.remove(doc.read().name()).unwrap();
+        doc.rename(to);
+
+        self.insert(doc);
+    }
+
+    pub fn insert(&mut self, item: EditorDocument<T>) {
+        let name = item.read().name().to_owned();
+        self.internal.insert(name, item);
     }
 }

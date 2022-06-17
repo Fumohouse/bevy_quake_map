@@ -23,12 +23,12 @@ impl ProjectPanel {
     ) -> Option<String> {
         const SPACING: f32 = 4.0;
 
-        let name_is_taken = ctx.read_project().entities.iter().any(|e| {
-            let read = e.read();
-            let name = read.name();
-
-            name == self.new_doc_name && Some(name) != current_entity
-        });
+        let name_is_taken =
+            if let Some(project) = ctx.read_project().entities.get(&self.new_doc_name) {
+                Some(project.read().name()) != current_entity
+            } else {
+                false
+            };
 
         let mut name = None;
 
@@ -62,10 +62,7 @@ impl ProjectPanel {
             let mut to_rename = None;
             let mut to_remove = None;
 
-            for (idx, doc) in ctx.read_project().entities.iter().enumerate() {
-                let read = doc.read();
-                let name = read.name();
-
+            for (name, doc) in ctx.read_project().entities.iter() {
                 let response = ui.add(egui::SelectableLabel::new(
                     self.selected_entity.as_deref() == Some(name),
                     name,
@@ -82,27 +79,27 @@ impl ProjectPanel {
                             self.new_doc_name.clear();
                             ui.close_menu();
 
-                            if Some(name) == self.selected_entity.as_deref() {
+                            if Some(name) == self.selected_entity.as_ref() {
                                 self.selected_entity = Some(new_name);
                             }
                         }
                     });
 
                     if ui.button("Delete").clicked() {
-                        to_remove = Some(idx);
+                        to_remove = Some(name.to_owned());
                         ui.close_menu();
                     }
                 });
             }
 
             if let Some((doc, new_name)) = to_rename {
-                doc.rename(&new_name);
+                ctx.write_project().entities.rename(&doc, &new_name);
                 // TODO: Move to a Task (?) + better error handling
                 doc.save(ctx.io.as_ref(), ctx.doc_context).unwrap();
             }
 
-            if let Some(idx) = to_remove {
-                let doc = ctx.write_project().entities.remove(idx);
+            if let Some(name) = to_remove {
+                let doc = ctx.write_project().entities.remove(&name).unwrap();
                 // TODO: Move to a task (?) + better error handling
                 doc.delete(ctx.io.as_ref()).unwrap();
             }
@@ -122,7 +119,7 @@ impl ProjectPanel {
 
                     let doc = EditorDocument::new(def, DocumentState::New);
 
-                    ctx.write_project().entities.push(doc);
+                    ctx.write_project().entities.insert(doc);
                     self.selected_entity = Some(new_name);
                 }
             });

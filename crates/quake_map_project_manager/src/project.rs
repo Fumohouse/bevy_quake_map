@@ -1,7 +1,7 @@
 use crate::{
     document::{
         entity::{EntityDefinition, ENTITIES_DIR},
-        DocumentIoContext, DocumentIoError, EditorDocument,
+        DocumentIoContext, DocumentIoError, EditorDocument, DocumentCollection,
     },
     io::EditorIo,
 };
@@ -10,7 +10,7 @@ use std::path::Path;
 
 #[derive(Default)]
 pub struct EditorProject {
-    pub entities: Vec<EditorDocument<EntityDefinition>>,
+    pub entities: DocumentCollection<EntityDefinition>,
 }
 
 fn search_directory(io: &dyn EditorIo, path: &Path, cb: &mut dyn FnMut(Vec<u8>)) {
@@ -29,7 +29,7 @@ impl EditorProject {
 
         search_directory(io, Path::new(ENTITIES_DIR), &mut |contents| {
             EditorDocument::<EntityDefinition>::load_buf(&contents, &doc_context)
-                .map(|doc| project.entities.push(doc))
+                .map(|doc| project.entities.insert(doc))
                 .unwrap_or_else(|err| {
                     warn!("Failed to parse entity definition: {}", err);
                 });
@@ -43,7 +43,7 @@ impl EditorProject {
         io: &dyn EditorIo,
         doc_context: DocumentIoContext,
     ) -> Result<(), DocumentIoError> {
-        for doc in &self.entities {
+        for doc in self.entities.values() {
             doc.save(io, &doc_context).unwrap_or_else(|err| {
                 warn!("Failed to save document: {}", err);
             });
