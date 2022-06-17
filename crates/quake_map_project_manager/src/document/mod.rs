@@ -186,14 +186,6 @@ impl<T: EditorDocumentItem> Deref for DocumentCollection<T> {
 }
 
 impl<T: EditorDocumentItem> DocumentCollection<T> {
-    pub fn get(&self, name: &str) -> Option<&EditorDocument<T>> {
-        self.internal.get(name)
-    }
-
-    pub fn contains(&self, name: &str) -> bool {
-        self.internal.contains_key(name)
-    }
-
     pub fn remove(&mut self, name: &str) -> Option<EditorDocument<T>> {
         self.internal.remove(name)
     }
