@@ -1,7 +1,7 @@
 use crate::{
     document::{
         entity::{EntityDefinition, ENTITIES_DIR},
-        DocumentIoContext, DocumentIoError, EditorDocument, DocumentCollection,
+        DocumentCollection, DocumentIoContext, DocumentIoError, EditorDocument,
     },
     io::EditorIo,
 };

@@ -1,9 +1,11 @@
 use crate::io::{EditorIo, EditorIoError};
 use bevy::{prelude::*, reflect::TypeRegistryArc};
 use std::{
+    collections::HashMap,
+    ops::Deref,
     path::Path,
     str::Utf8Error,
-    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard}, collections::HashMap, ops::Deref,
+    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 use thiserror::Error;
 
@@ -169,7 +171,9 @@ pub struct DocumentCollection<T: EditorDocumentItem> {
 
 impl<T: EditorDocumentItem> Default for DocumentCollection<T> {
     fn default() -> Self {
-        Self { internal: HashMap::new() }
+        Self {
+            internal: HashMap::new(),
+        }
     }
 }
 
