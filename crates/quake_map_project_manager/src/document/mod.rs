@@ -50,6 +50,7 @@ pub trait EditorDocumentItem: Sized {
 
     fn save_path(&self) -> String;
 
+    fn name(&self) -> &str;
     fn set_name(&mut self, new_name: &str);
 }
 

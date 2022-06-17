@@ -51,6 +51,10 @@ impl EditorDocumentItem for EntityDefinition {
         format!("{}/{}.fgd", ENTITIES_DIR, self.class.name)
     }
 
+    fn name(&self) -> &str {
+        &self.class.name
+    }
+
     fn set_name(&mut self, new_name: &str) {
         self.class.name = new_name.to_string();
     }

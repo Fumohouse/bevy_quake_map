@@ -1,5 +1,7 @@
 use super::{EditorComponent, EditorComponentContext};
-use crate::document::{entity::EntityDefinition, EditorDocument, DocumentState};
+use crate::document::{
+    entity::EntityDefinition, DocumentState, EditorDocument, EditorDocumentItem,
+};
 use bevy_egui::{
     egui::{self, style::Margin, Color32},
     EguiContext,
@@ -22,8 +24,10 @@ impl ProjectPanel {
         const SPACING: f32 = 4.0;
 
         let name_is_taken = ctx.read_project().entities.iter().any(|e| {
-            let name = &e.read().class.name;
-            name == &self.new_doc_name && Some(name as &str) != current_entity
+            let read = e.read();
+            let name = read.name();
+
+            name == self.new_doc_name && Some(name) != current_entity
         });
 
         let mut name = None;
@@ -58,7 +62,7 @@ impl ProjectPanel {
             let mut to_remove = None;
 
             for (idx, doc) in ctx.read_project().entities.iter().enumerate() {
-                let name = doc.read().class.name.clone();
+                let name = doc.read().name().to_string();
 
                 let response = ui.add(egui::SelectableLabel::new(
                     self.selected_entity.as_ref() == Some(&name),
