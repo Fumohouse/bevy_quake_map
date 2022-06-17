@@ -59,46 +59,52 @@ impl ProjectPanel {
 
     fn entity_selector(&mut self, ctx: &EditorComponentContext, ui: &mut egui::Ui) {
         ui.collapsing("Entities", |ui| {
+            let mut to_rename = None;
             let mut to_remove = None;
 
             for (idx, doc) in ctx.read_project().entities.iter().enumerate() {
-                let name = doc.read().name().to_string();
+                let read = doc.read();
+                let name = read.name();
 
                 let response = ui.add(egui::SelectableLabel::new(
-                    self.selected_entity.as_ref() == Some(&name),
-                    &name,
+                    self.selected_entity.as_deref() == Some(name),
+                    name,
                 ));
 
                 if response.clicked() {
-                    self.selected_entity = Some(name.clone());
+                    self.selected_entity = Some(name.to_owned());
                 }
 
                 response.context_menu(|ui| {
                     ui.menu_button("Rename", |ui| {
-                        if let Some(new_name) = self.entity_name(ctx, ui, Some(&name)) {
-                            doc.rename(&new_name);
-                            // TODO: Move to a Task (?) + better error handling
-                            doc.save(ctx.io.as_ref(), ctx.doc_context).unwrap();
+                        if let Some(new_name) = self.entity_name(ctx, ui, Some(name)) {
+                            to_rename = Some((doc.clone(), new_name.clone()));
                             self.new_doc_name.clear();
                             ui.close_menu();
 
-                            if Some(name) == self.selected_entity {
+                            if Some(name) == self.selected_entity.as_deref() {
                                 self.selected_entity = Some(new_name);
                             }
                         }
                     });
 
                     if ui.button("Delete").clicked() {
-                        // TODO: Move to a task (?) + better error handling
-                        doc.delete(ctx.io.as_ref()).unwrap();
                         to_remove = Some(idx);
                         ui.close_menu();
                     }
                 });
             }
 
+            if let Some((doc, new_name)) = to_rename {
+                doc.rename(&new_name);
+                // TODO: Move to a Task (?) + better error handling
+                doc.save(ctx.io.as_ref(), ctx.doc_context).unwrap();
+            }
+
             if let Some(idx) = to_remove {
-                ctx.write_project().entities.remove(idx);
+                let doc = ctx.write_project().entities.remove(idx);
+                // TODO: Move to a task (?) + better error handling
+                doc.delete(ctx.io.as_ref()).unwrap();
             }
 
             ui.menu_button("+ Add", |ui| {
