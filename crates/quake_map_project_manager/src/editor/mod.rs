@@ -13,7 +13,7 @@ use bevy_egui::{
     EguiContext,
 };
 use futures_lite::future;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 mod project_panel;
 use project_panel::ProjectPanel;
@@ -29,6 +29,16 @@ struct EditorComponentContext<'a> {
     project: Arc<RwLock<EditorProject>>,
     io: Arc<dyn EditorIo>,
     doc_context: &'a DocumentIoContext,
+}
+
+impl<'a> EditorComponentContext<'a> {
+    pub fn read_project(&self) -> RwLockReadGuard<EditorProject> {
+        self.project.read().unwrap()
+    }
+
+    pub fn write_project(&self) -> RwLockWriteGuard<EditorProject> {
+        self.project.write().unwrap()
+    }
 }
 
 trait EditorComponent: Send + Sync {

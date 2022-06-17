@@ -21,7 +21,7 @@ impl ProjectPanel {
     ) -> Option<String> {
         const SPACING: f32 = 4.0;
 
-        let name_is_taken = ctx.project.read().unwrap().entities.iter().any(|e| {
+        let name_is_taken = ctx.read_project().entities.iter().any(|e| {
             let name = &e.read().class.name;
             name == &self.new_doc_name && Some(name as &str) != current_entity
         });
@@ -57,7 +57,7 @@ impl ProjectPanel {
         ui.collapsing("Entities", |ui| {
             let mut to_remove = None;
 
-            for (idx, doc) in ctx.project.read().unwrap().entities.iter().enumerate() {
+            for (idx, doc) in ctx.read_project().entities.iter().enumerate() {
                 let name = doc.read().class.name.clone();
 
                 let response = ui.add(egui::SelectableLabel::new(
@@ -94,7 +94,7 @@ impl ProjectPanel {
             }
 
             if let Some(idx) = to_remove {
-                ctx.project.write().unwrap().entities.remove(idx);
+                ctx.write_project().entities.remove(idx);
             }
 
             ui.menu_button("+ Add", |ui| {
@@ -112,7 +112,7 @@ impl ProjectPanel {
 
                     let doc = EditorDocument::new(def, DocumentState::New);
 
-                    ctx.project.write().unwrap().entities.push(doc);
+                    ctx.write_project().entities.push(doc);
                     self.selected_entity = Some(new_name);
                 }
             });
