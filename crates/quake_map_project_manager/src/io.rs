@@ -15,6 +15,8 @@ pub enum EditorIoError {
 pub trait EditorIo: Send + Sync {
     fn read_file(&self, path: &Path) -> Result<Vec<u8>, EditorIoError>;
     fn write_file(&self, path: &Path, contents: &[u8]) -> Result<(), EditorIoError>;
+    fn delete_file(&self, path: &Path) -> Result<(), EditorIoError>;
+    fn move_file(&self, from: &Path, to: &Path) -> Result<(), EditorIoError>;
 
     fn read_directory(
         &self,
@@ -22,6 +24,17 @@ pub trait EditorIo: Send + Sync {
     ) -> Result<Box<dyn Iterator<Item = PathBuf>>, EditorIoError>;
 
     fn create_directory(&self, path: &Path) -> Result<(), EditorIoError>;
+
+    fn create_dir_if_not_exists(&self, path: &Path) -> Result<(), EditorIoError> {
+        match self.read_directory(path) {
+            Ok(_) => Ok(()),
+            Err(EditorIoError::NotFound(..)) => {
+                self.create_directory(path)?;
+                Ok(())
+            }
+            Err(err) => Err(err),
+        }
+    }
 }
 
 pub struct FileEditorIo {
@@ -48,6 +61,14 @@ impl EditorIo for FileEditorIo {
         Ok(fs::write(self.root.join(path), contents)?)
     }
 
+    fn delete_file(&self, path: &Path) -> Result<(), EditorIoError> {
+        Ok(fs::remove_file(self.root.join(path))?)
+    }
+
+    fn move_file(&self, from: &Path, to: &Path) -> Result<(), EditorIoError> {
+        Ok(fs::rename(self.root.join(from), self.root.join(to))?)
+    }
+
     fn read_directory(
         &self,
         path: &Path,
@@ -63,6 +84,6 @@ impl EditorIo for FileEditorIo {
     }
 
     fn create_directory(&self, path: &Path) -> Result<(), EditorIoError> {
-        Ok(fs::create_dir_all(path)?)
+        Ok(fs::create_dir_all(self.root.join(path))?)
     }
 }

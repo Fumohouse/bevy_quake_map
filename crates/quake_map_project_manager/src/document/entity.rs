@@ -14,13 +14,15 @@ use serde::{
     Deserialize, Serialize,
 };
 
+pub const ENTITIES_DIR: &str = "entities/";
+
 const STRUCT_NAME: &str = "EntityDefinition";
 const FIELD_CLASS: &str = "class";
 const FIELD_SCENE: &str = "scene";
 
 pub struct EntityDefinition {
-    class: FgdClass,
-    scene: Option<DynamicScene>,
+    pub class: FgdClass,
+    pub scene: Option<DynamicScene>,
 }
 
 impl EditorDocumentItem for EntityDefinition {
@@ -43,6 +45,14 @@ impl EditorDocumentItem for EntityDefinition {
         };
 
         Ok(serialize_ron(serializer)?)
+    }
+
+    fn save_path(&self) -> String {
+        format!("{}/{}.fgd", ENTITIES_DIR, self.class.name)
+    }
+
+    fn set_name(&mut self, new_name: &str) {
+        self.class.name = new_name.to_string();
     }
 }
 
