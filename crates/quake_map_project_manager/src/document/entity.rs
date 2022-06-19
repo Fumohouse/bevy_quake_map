@@ -48,7 +48,7 @@ impl EditorDocumentItem for EntityDefinition {
     }
 
     fn save_path(&self) -> String {
-        format!("{}/{}.fgd", ENTITIES_DIR, self.class.name)
+        format!("{}/{}.entity.ron", ENTITIES_DIR, self.class.name)
     }
 
     fn name(&self) -> &str {
