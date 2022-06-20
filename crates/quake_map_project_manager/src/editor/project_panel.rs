@@ -1,4 +1,4 @@
-use super::{EditorComponent, EditorComponentContext};
+use super::{widgets::grid_inspector, EditorComponent, EditorComponentContext};
 use crate::document::{
     entity::EntityDefinition, DocumentState, EditorDocument, EditorDocumentItem,
 };
@@ -57,8 +57,25 @@ impl ProjectPanel {
         name
     }
 
+    fn project_settings(&mut self, ctx: &EditorComponentContext, ui: &mut egui::Ui) {
+        let project = ctx.read_project();
+        let mut settings = project.settings.write();
+
+        ui.collapsing("Project Settings", |ui| {
+            grid_inspector("project_settings", ui, |ui| {
+                ui.label("Name");
+                ui.text_edit_singleline(&mut settings.name);
+                ui.end_row();
+
+                ui.label("Description");
+                ui.text_edit_multiline(&mut settings.description);
+                ui.end_row();
+            });
+        });
+    }
+
     fn entity_selector(&mut self, ctx: &EditorComponentContext, ui: &mut egui::Ui) {
-        ui.collapsing("Entities", |ui| {
+        ui.collapsing("Entity Definitions", |ui| {
             let mut to_rename = None;
             let mut to_remove = None;
 
@@ -138,6 +155,7 @@ impl EditorComponent for ProjectPanel {
                 });
 
                 egui::ScrollArea::vertical().show(ui, |ui| {
+                    self.project_settings(component_context, ui);
                     self.entity_selector(component_context, ui);
                 });
             });

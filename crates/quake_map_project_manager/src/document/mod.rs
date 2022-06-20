@@ -10,6 +10,7 @@ use std::{
 use thiserror::Error;
 
 pub mod entity;
+pub mod game_settings;
 
 #[derive(Clone)]
 pub struct DocumentIoContext {

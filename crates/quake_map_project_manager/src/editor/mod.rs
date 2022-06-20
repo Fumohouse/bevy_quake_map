@@ -15,6 +15,8 @@ use bevy_egui::{
 use futures_lite::future;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
+mod widgets;
+
 mod project_panel;
 use project_panel::ProjectPanel;
 
