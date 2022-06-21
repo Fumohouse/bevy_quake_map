@@ -1,9 +1,7 @@
-use super::{
-    widgets::{self, grid_inspector},
-    ComponentDrawContext, EditorComponent, EditorComponentWithState,
-};
-use crate::document::{
-    entity::EntityDefinition, DocumentState, EditorDocument, EditorDocumentItem,
+use super::{ComponentDrawContext, EditorComponent, EditorComponentWithState};
+use crate::{
+    document::{entity::EntityDefinition, DocumentState, EditorDocument, EditorDocumentItem},
+    editor::widgets,
 };
 use bevy_egui::{egui, EguiContext};
 use bevy_quake_map::fgd::{FgdClass, FgdClassType};
@@ -23,7 +21,7 @@ fn project_settings(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
     let mut settings = project.settings.write();
 
     ui.collapsing("Project Settings", |ui| {
-        grid_inspector("project_settings", ui, |ui| {
+        widgets::grid_inspector("project_settings", ui, |ui| {
             ui.label("Name");
             ui.text_edit_singleline(&mut settings.name);
             ui.end_row();

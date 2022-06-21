@@ -16,13 +16,13 @@ use futures_lite::future;
 use parking_lot::RwLock;
 use std::sync::Arc;
 
-mod component;
-use component::{ComponentDrawContext, ComponentStates, EditorComponent, EditorComponentWithState};
+mod components;
+use components::{
+    project_panel::ProjectPanel, ComponentDrawContext, ComponentStates, EditorComponent,
+    EditorComponentWithState,
+};
 
 mod widgets;
-
-mod project_panel;
-use project_panel::ProjectPanel;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum EditorState {

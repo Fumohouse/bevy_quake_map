@@ -11,6 +11,8 @@ use std::{
     sync::Arc,
 };
 
+pub mod project_panel;
+
 pub struct ComponentDrawContext<'a> {
     pub project: Arc<RwLock<EditorProject>>,
     pub io: Arc<dyn EditorIo>,
