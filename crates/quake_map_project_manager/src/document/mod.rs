@@ -1,7 +1,13 @@
 use crate::io::{EditorIo, EditorIoError};
 use bevy::{prelude::*, reflect::TypeRegistryArc};
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::{collections::HashMap, ops::Deref, path::Path, str::Utf8Error, sync::Arc};
+use std::{
+    collections::HashMap,
+    ops::{Deref, DerefMut},
+    path::Path,
+    str::Utf8Error,
+    sync::Arc,
+};
 use thiserror::Error;
 
 pub mod entity;
@@ -79,14 +85,16 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
     }
 
     pub fn write(&self) -> RwLockWriteGuard<T> {
+        self.internal.write()
+    }
+
+    pub fn mark_changed(&self) {
         // Lock does not get dropped when put into if let.
         let current_state = self.state.read().clone();
 
         if let DocumentState::Clean = current_state {
             *self.state.write() = DocumentState::Modified;
         }
-
-        self.internal.write()
     }
 
     pub fn load_buf(

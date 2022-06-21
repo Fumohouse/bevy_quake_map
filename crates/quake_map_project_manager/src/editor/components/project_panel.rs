@@ -17,16 +17,21 @@ pub struct ProjectPanelState {
 pub struct ProjectPanel;
 
 fn project_settings(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
-    let mut settings = ctx.project.settings.write();
+    let settings = &ctx.project.settings;
+    let mut settings_doc = settings.write();
 
     ui.collapsing("Project Settings", |ui| {
         widgets::grid_inspector("project_settings", ui, |ui| {
             ui.label("Name");
-            ui.text_edit_singleline(&mut settings.name);
+            if ui.text_edit_singleline(&mut settings_doc.name).changed() {
+                settings.mark_changed();
+            }
             ui.end_row();
 
             ui.label("Description");
-            ui.text_edit_multiline(&mut settings.description);
+            if ui.text_edit_multiline(&mut settings_doc.description).changed() {
+                settings.mark_changed();
+            }
             ui.end_row();
         });
     });
