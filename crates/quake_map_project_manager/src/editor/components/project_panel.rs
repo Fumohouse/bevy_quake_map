@@ -11,7 +11,7 @@ const FGD_NAME_PROMPT: &str = "New FGD class name:";
 #[derive(Default)]
 pub struct ProjectPanelState {
     new_doc_name: String,
-    selected_entity: Option<String>,
+    pub selected_entity: Option<String>,
 }
 
 pub struct ProjectPanel;
@@ -33,8 +33,8 @@ fn project_settings(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
     });
 }
 
-fn entity_selector(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
-    let state = &mut *ctx.component_states.get_state_mut::<ProjectPanelState>();
+fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
+    let state = ctx.component_states.get_state_mut::<ProjectPanelState>();
 
     ui.collapsing("Entity Definitions", |ui| {
         let mut to_rename = None;
@@ -121,7 +121,7 @@ fn entity_selector(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
 }
 
 impl EditorComponent for ProjectPanel {
-    fn draw(&self, egui_context: &mut EguiContext, component_context: &ComponentDrawContext) {
+    fn draw(&self, egui_context: &mut EguiContext, component_context: &mut ComponentDrawContext) {
         egui::SidePanel::left("project_panel")
             .default_width(250.0)
             .width_range(100.0..=400.0)

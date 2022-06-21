@@ -18,8 +18,8 @@ use std::sync::Arc;
 
 mod components;
 use components::{
-    project_panel::ProjectPanel, ComponentDrawContext, ComponentStates, EditorComponent,
-    EditorComponentWithState,
+    entity_definition_editor::EntityDefinitionEditor, project_panel::ProjectPanel,
+    ComponentDrawContext, ComponentStates, EditorComponent, EditorComponentWithState,
 };
 
 mod widgets;
@@ -61,13 +61,13 @@ impl FromWorld for EditorContext {
 }
 
 trait AddEditorComponent {
-    fn add_editor_component<T>(&mut self, component: T)
+    fn add_editor_component<T>(&mut self, component: T) -> &mut App
     where
         T: EditorComponentWithState + 'static;
 }
 
 impl AddEditorComponent for App {
-    fn add_editor_component<T>(&mut self, component: T)
+    fn add_editor_component<T>(&mut self, component: T) -> &mut App
     where
         T: EditorComponentWithState + 'static,
     {
@@ -75,6 +75,8 @@ impl AddEditorComponent for App {
 
         editor_context.components.push(Box::new(component));
         editor_context.component_states.insert(T::State::default());
+
+        self
     }
 }
 
@@ -85,7 +87,8 @@ impl Plugin for EditorPlugin {
         app.add_state(EditorState::Loading)
             .init_resource::<DocumentIoContext>()
             .init_resource::<EditorContext>()
-            .add_editor_component(ProjectPanel);
+            .add_editor_component(ProjectPanel)
+            .add_editor_component(EntityDefinitionEditor);
 
         app.add_system_set(SystemSet::on_enter(EditorState::Loading).with_system(begin_load))
             .add_system_set(SystemSet::on_update(EditorState::Loading).with_system(poll_load));
@@ -196,7 +199,7 @@ fn poll_save(
 }
 
 fn draw_editor(
-    editor_context: Res<EditorContext>,
+    mut editor_context: ResMut<EditorContext>,
     doc_context: Res<DocumentIoContext>,
     mut egui_context: ResMut<EguiContext>,
     mut editor_state: ResMut<State<EditorState>>,
@@ -220,14 +223,16 @@ fn draw_editor(
         });
     });
 
-    let component_ctx = ComponentDrawContext {
+    let editor_context = &mut *editor_context;
+
+    let mut component_ctx = ComponentDrawContext {
         project: editor_context.project(),
         io: editor_context.io.clone(),
         doc_context: &doc_context,
-        component_states: editor_context.component_states.clone(),
+        component_states: &mut editor_context.component_states,
     };
 
-    for component in &editor_context.components {
-        component.draw(&mut egui_context, &component_ctx);
+    for component in editor_context.components.iter() {
+        component.draw(&mut egui_context, &mut component_ctx);
     }
 }
