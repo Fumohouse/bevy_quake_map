@@ -2,7 +2,6 @@
 
 use crate::{document::DocumentIoContext, io::EditorIo, project::EditorProject};
 use bevy_egui::EguiContext;
-use parking_lot::RwLock;
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
@@ -13,7 +12,7 @@ pub mod entity_definition_editor;
 pub mod project_panel;
 
 pub struct ComponentDrawContext<'a> {
-    pub project: Arc<RwLock<EditorProject>>,
+    pub project: &'a mut EditorProject,
     pub io: Arc<dyn EditorIo>,
     pub doc_context: &'a DocumentIoContext,
     pub component_states: &'a mut ComponentStates,

@@ -9,6 +9,7 @@ use crate::{
 use bevy::prelude::*;
 use std::path::Path;
 
+#[derive(Clone)]
 pub struct EditorProject {
     pub settings: EditorDocument<GameSettings>,
     pub entities: DocumentCollection<EntityDefinition>,

@@ -35,7 +35,6 @@ impl EditorComponent for EntityDefinitionEditor {
             state.selected_document = selected_entity.as_ref().map(|name| {
                 component_context
                     .project
-                    .read()
                     .entities
                     .get(name)
                     .unwrap()

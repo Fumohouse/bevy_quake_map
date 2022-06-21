@@ -13,7 +13,6 @@ use bevy_egui::{
     EguiContext,
 };
 use futures_lite::future;
-use parking_lot::RwLock;
 use std::sync::Arc;
 
 mod components;
@@ -33,16 +32,10 @@ enum EditorState {
 
 struct EditorContext {
     io: Arc<dyn EditorIo>,
-    project: Option<Arc<RwLock<EditorProject>>>,
+    project: Option<EditorProject>,
     task_pool: TaskPool,
     components: Vec<Box<dyn EditorComponent>>,
     component_states: ComponentStates,
-}
-
-impl EditorContext {
-    fn project(&self) -> Arc<RwLock<EditorProject>> {
-        self.project.as_ref().unwrap().clone()
-    }
 }
 
 impl FromWorld for EditorContext {
@@ -139,7 +132,7 @@ fn poll_load(
 
     for (entity, mut task) in query.iter_mut() {
         if let Some(result) = future::block_on(future::poll_once(&mut *task)) {
-            editor_context.project = Some(Arc::new(RwLock::new(result)));
+            editor_context.project = Some(result);
 
             state.set(EditorState::Ready).unwrap();
             commands.entity(entity).despawn();
@@ -157,13 +150,13 @@ fn begin_save(
     doc_context: Res<DocumentIoContext>,
 ) {
     let io = editor_context.io.clone();
-    let project = editor_context.project();
+    let project = editor_context.project.clone().unwrap();
 
     let doc_context = doc_context.clone();
 
     let task = editor_context
         .task_pool
-        .spawn(async move { project.read().save(io.as_ref(), doc_context) });
+        .spawn(async move { project.save(io.as_ref(), doc_context) });
 
     commands.spawn().insert(task);
 }
@@ -226,7 +219,7 @@ fn draw_editor(
     let editor_context = &mut *editor_context;
 
     let mut component_ctx = ComponentDrawContext {
-        project: editor_context.project(),
+        project: editor_context.project.as_mut().unwrap(),
         io: editor_context.io.clone(),
         doc_context: &doc_context,
         component_states: &mut editor_context.component_states,

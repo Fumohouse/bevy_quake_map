@@ -17,8 +17,7 @@ pub struct ProjectPanelState {
 pub struct ProjectPanel;
 
 fn project_settings(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
-    let project = ctx.project.read();
-    let mut settings = project.settings.write();
+    let mut settings = ctx.project.settings.write();
 
     ui.collapsing("Project Settings", |ui| {
         widgets::grid_inspector("project_settings", ui, |ui| {
@@ -40,7 +39,7 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
         let mut to_rename = None;
         let mut to_remove = None;
 
-        for (name, doc) in ctx.project.read().entities.iter() {
+        for (name, doc) in ctx.project.entities.iter() {
             let response = ui.add(egui::SelectableLabel::new(
                 state.selected_entity.as_deref() == Some(name),
                 name,
@@ -56,7 +55,7 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
                         FGD_NAME_PROMPT,
                         &mut state.new_doc_name,
                         |name| {
-                            if let Some(document) = ctx.project.read().entities.get(name) {
+                            if let Some(document) = ctx.project.entities.get(name) {
                                 Some(document.read().name()) != state.selected_entity.as_deref()
                             } else {
                                 false
@@ -82,13 +81,13 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
         }
 
         if let Some((doc, new_name)) = to_rename {
-            ctx.project.write().entities.rename(&doc, &new_name);
+            ctx.project.entities.rename(&doc, &new_name);
             // TODO: Move to a Task (?) + better error handling
             doc.save(ctx.io.as_ref(), ctx.doc_context).unwrap();
         }
 
         if let Some(name) = to_remove {
-            let doc = ctx.project.write().entities.remove(&name).unwrap();
+            let doc = ctx.project.entities.remove(&name).unwrap();
             // TODO: Move to a task (?) + better error handling
             doc.delete(ctx.io.as_ref()).unwrap();
         }
@@ -97,7 +96,7 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
             if let Some(new_name) = widgets::rename_prompt(
                 FGD_NAME_PROMPT,
                 &mut state.new_doc_name,
-                |name| ctx.project.read().entities.contains_key(name),
+                |name| ctx.project.entities.contains_key(name),
                 ui,
             ) {
                 let def = EntityDefinition {
@@ -113,7 +112,7 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
 
                 let doc = EditorDocument::new(def, DocumentState::New);
 
-                ctx.project.write().entities.insert(doc);
+                ctx.project.entities.insert(doc);
                 state.selected_entity = Some(new_name);
             }
         });

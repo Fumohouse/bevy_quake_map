@@ -161,6 +161,14 @@ pub struct DocumentCollection<T: EditorDocumentItem> {
     internal: HashMap<String, EditorDocument<T>>,
 }
 
+impl<T: EditorDocumentItem> Clone for DocumentCollection<T> {
+    fn clone(&self) -> Self {
+        Self {
+            internal: self.internal.clone(),
+        }
+    }
+}
+
 impl<T: EditorDocumentItem> Default for DocumentCollection<T> {
     fn default() -> Self {
         Self {
