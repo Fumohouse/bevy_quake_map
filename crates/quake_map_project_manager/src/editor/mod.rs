@@ -1,3 +1,5 @@
+// Reference: https://github.com/jakobhellermann/bevy_editor_pls
+
 use crate::{
     document::{DocumentIoContext, DocumentIoError},
     io::{EditorIo, FileEditorIo},
@@ -9,11 +11,14 @@ use bevy::{
     tasks::{IoTaskPool, Task, TaskPool},
 };
 use bevy_egui::{
-    egui::{self, Align2},
+    egui::{self, util::id_type_map::TypeId, Align2},
     EguiContext,
 };
 use futures_lite::future;
-use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use parking_lot::{
+    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
+};
+use std::{any::Any, collections::HashMap, sync::Arc};
 
 mod widgets;
 
@@ -27,24 +32,47 @@ enum EditorState {
     Ready,
 }
 
-struct EditorComponentContext<'a> {
+struct ComponentDrawContext<'a> {
     project: Arc<RwLock<EditorProject>>,
     io: Arc<dyn EditorIo>,
     doc_context: &'a DocumentIoContext,
+    component_states: ComponentStates,
 }
 
-impl<'a> EditorComponentContext<'a> {
-    pub fn read_project(&self) -> RwLockReadGuard<EditorProject> {
-        self.project.read().unwrap()
+#[derive(Default, Clone)]
+struct ComponentStates(Arc<RwLock<HashMap<TypeId, Box<dyn Any + Send + Sync>>>>);
+
+impl ComponentStates {
+    fn insert<T>(&self, state: T)
+    where
+        T: Any + Send + Sync
+    {
+        self.0.write().insert(TypeId::of::<T>(), Box::new(state));
     }
 
-    pub fn write_project(&self) -> RwLockWriteGuard<EditorProject> {
-        self.project.write().unwrap()
+    fn get_state<T: Any + Send + Sync>(&self) -> MappedRwLockReadGuard<T> {
+        RwLockReadGuard::map(self.0.read(), |lock| {
+            lock[&TypeId::of::<T>()].downcast_ref().unwrap()
+        })
+    }
+
+    fn get_state_mut<T: Any + Send + Sync>(&self) -> MappedRwLockWriteGuard<T> {
+        RwLockWriteGuard::map(self.0.write(), |value| {
+            value
+                .get_mut(&TypeId::of::<T>())
+                .unwrap()
+                .downcast_mut()
+                .unwrap()
+        })
     }
 }
 
 trait EditorComponent: Send + Sync {
-    fn draw(&mut self, egui_context: &mut EguiContext, component_context: &EditorComponentContext);
+    fn draw(&self, egui_context: &mut EguiContext, component_context: &ComponentDrawContext);
+}
+
+trait EditorComponentWithState: EditorComponent {
+    type State: Default + Any + Send + Sync;
 }
 
 struct EditorContext {
@@ -52,6 +80,7 @@ struct EditorContext {
     project: Option<Arc<RwLock<EditorProject>>>,
     task_pool: TaskPool,
     components: Vec<Box<dyn EditorComponent>>,
+    component_states: ComponentStates,
 }
 
 impl EditorContext {
@@ -69,8 +98,27 @@ impl FromWorld for EditorContext {
             io: Arc::new(FileEditorIo::new(&root)),
             project: None,
             task_pool,
-            components: vec![Box::new(ProjectPanel::default())],
+            components: Vec::new(),
+            component_states: ComponentStates::default(),
         }
+    }
+}
+
+trait AddEditorComponent {
+    fn add_editor_component<T>(&mut self, component: T)
+    where
+        T: EditorComponentWithState + 'static;
+}
+
+impl AddEditorComponent for App {
+    fn add_editor_component<T>(&mut self, component: T)
+    where
+        T: EditorComponentWithState + 'static,
+    {
+        let mut editor_context = self.world.resource_mut::<EditorContext>();
+
+        editor_context.components.push(Box::new(component));
+        editor_context.component_states.insert(T::State::default());
     }
 }
 
@@ -80,7 +128,8 @@ impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         app.add_state(EditorState::Loading)
             .init_resource::<DocumentIoContext>()
-            .init_resource::<EditorContext>();
+            .init_resource::<EditorContext>()
+            .add_editor_component(ProjectPanel);
 
         app.add_system_set(SystemSet::on_enter(EditorState::Loading).with_system(begin_load))
             .add_system_set(SystemSet::on_update(EditorState::Loading).with_system(poll_load));
@@ -155,7 +204,7 @@ fn begin_save(
 
     let task = editor_context
         .task_pool
-        .spawn(async move { project.read().unwrap().save(io.as_ref(), doc_context) });
+        .spawn(async move { project.read().save(io.as_ref(), doc_context) });
 
     commands.spawn().insert(task);
 }
@@ -191,7 +240,7 @@ fn poll_save(
 }
 
 fn draw_editor(
-    mut editor_context: ResMut<EditorContext>,
+    editor_context: Res<EditorContext>,
     doc_context: Res<DocumentIoContext>,
     mut egui_context: ResMut<EguiContext>,
     mut editor_state: ResMut<State<EditorState>>,
@@ -215,13 +264,14 @@ fn draw_editor(
         });
     });
 
-    let component_ctx = EditorComponentContext {
+    let component_ctx = ComponentDrawContext {
         project: editor_context.project(),
         io: editor_context.io.clone(),
         doc_context: &doc_context,
+        component_states: editor_context.component_states.clone(),
     };
 
-    for component in &mut editor_context.components {
+    for component in &editor_context.components {
         component.draw(&mut egui_context, &component_ctx);
     }
 }

@@ -1,12 +1,7 @@
 use crate::io::{EditorIo, EditorIoError};
 use bevy::{prelude::*, reflect::TypeRegistryArc};
-use std::{
-    collections::HashMap,
-    ops::Deref,
-    path::Path,
-    str::Utf8Error,
-    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
-};
+use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::{collections::HashMap, ops::Deref, path::Path, str::Utf8Error, sync::Arc};
 use thiserror::Error;
 
 pub mod entity;
@@ -79,23 +74,19 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
         }
     }
 
-    pub fn state(&self) -> RwLockReadGuard<DocumentState> {
-        self.state.read().unwrap()
-    }
-
     pub fn read(&self) -> RwLockReadGuard<T> {
-        self.internal.read().unwrap()
+        self.internal.read()
     }
 
     pub fn write(&self) -> RwLockWriteGuard<T> {
         // Lock does not get dropped when put into if let.
-        let current_state = self.state().clone();
+        let current_state = self.state.read().clone();
 
         if let DocumentState::Clean = current_state {
-            *self.state.write().unwrap() = DocumentState::Modified;
+            *self.state.write() = DocumentState::Modified;
         }
 
-        self.internal.write().unwrap()
+        self.internal.write()
     }
 
     pub fn load_buf(
@@ -118,18 +109,18 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
         io: &dyn EditorIo,
         doc_context: &DocumentIoContext,
     ) -> Result<(), DocumentIoError> {
-        if let DocumentState::Clean = *self.state() {
+        if let DocumentState::Clean = *self.state.read() {
             return Ok(());
         }
 
-        if let DocumentState::Renamed(old_path) = &*self.state() {
+        if let DocumentState::Renamed(old_path) = &*self.state.read() {
             io.delete_file(Path::new(old_path))?;
         }
 
         let res = self.read().serialize(doc_context)?;
         io.write_file(Path::new(&self.read().save_path()), res.as_bytes())?;
 
-        *self.state.write().unwrap() = DocumentState::Clean;
+        *self.state.write() = DocumentState::Clean;
         Ok(())
     }
 
@@ -140,19 +131,19 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
 
         // New files don't have an old path;
         // don't overwrite old path if renamed multiple times
-        if let DocumentState::New | DocumentState::Renamed(_) = *self.state() {
+        if let DocumentState::New | DocumentState::Renamed(_) = *self.state.read() {
             return;
         }
 
-        *self.state.write().unwrap() = DocumentState::Renamed(old_path);
+        *self.state.write() = DocumentState::Renamed(old_path);
     }
 
     pub fn delete(&self, io: &dyn EditorIo) -> Result<(), DocumentIoError> {
-        if let DocumentState::New = *self.state() {
+        if let DocumentState::New = *self.state.read() {
             return Ok(());
         }
 
-        let path = match &*self.state() {
+        let path = match &*self.state.read() {
             DocumentState::Renamed(old_path) => old_path.clone(),
             _ => self.read().save_path(),
         };
@@ -160,7 +151,7 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
         io.delete_file(Path::new(&path))?;
 
         // Treat future operations (ideally none) as if the document is new
-        *self.state.write().unwrap() = DocumentState::New;
+        *self.state.write() = DocumentState::New;
 
         Ok(())
     }
