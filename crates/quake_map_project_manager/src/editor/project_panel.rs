@@ -1,13 +1,11 @@
 use super::{
-    widgets::grid_inspector, ComponentDrawContext, EditorComponent, EditorComponentWithState,
+    widgets::{self, grid_inspector},
+    ComponentDrawContext, EditorComponent, EditorComponentWithState,
 };
 use crate::document::{
     entity::EntityDefinition, DocumentState, EditorDocument, EditorDocumentItem,
 };
-use bevy_egui::{
-    egui::{self, style::Margin, Color32},
-    EguiContext,
-};
+use bevy_egui::{egui, EguiContext};
 use bevy_quake_map::fgd::{FgdClass, FgdClassType};
 
 const FGD_NAME_PROMPT: &str = "New FGD class name:";
@@ -19,43 +17,6 @@ pub struct ProjectPanelState {
 }
 
 pub struct ProjectPanel;
-
-fn rename_prompt(
-    prompt: &str,
-    current_value: &mut String,
-    is_taken: impl FnOnce(&str) -> bool,
-    ui: &mut egui::Ui,
-) -> Option<String> {
-    const SPACING: f32 = 4.0;
-
-    let name_is_taken = is_taken(current_value);
-
-    let mut name = None;
-
-    egui::Frame::none()
-        .inner_margin(Margin::same(SPACING))
-        .show(ui, |ui| {
-            ui.label(prompt);
-            ui.add_space(SPACING);
-
-            if ui.text_edit_singleline(current_value).lost_focus() && !name_is_taken {
-                let new_name = current_value.clone();
-                current_value.clear();
-
-                name = Some(new_name);
-                ui.close_menu();
-            }
-
-            if name_is_taken {
-                ui.add_space(SPACING);
-                ui.horizontal_wrapped(|ui| {
-                    ui.colored_label(Color32::RED, "This entity name is already in use.");
-                });
-            }
-        });
-
-    name
-}
 
 fn project_settings(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
     let project = ctx.project.read();
@@ -93,7 +54,7 @@ fn entity_selector(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
 
             response.context_menu(|ui| {
                 ui.menu_button("Rename", |ui| {
-                    if let Some(new_name) = rename_prompt(
+                    if let Some(new_name) = widgets::rename_prompt(
                         FGD_NAME_PROMPT,
                         &mut state.new_doc_name,
                         |name| {
@@ -135,7 +96,7 @@ fn entity_selector(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
         }
 
         ui.menu_button("+ Add", |ui| {
-            if let Some(new_name) = rename_prompt(
+            if let Some(new_name) = widgets::rename_prompt(
                 FGD_NAME_PROMPT,
                 &mut state.new_doc_name,
                 |name| ctx.project.read().entities.contains_key(name),
