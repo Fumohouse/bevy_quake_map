@@ -1,5 +1,3 @@
-// Reference: https://github.com/jakobhellermann/bevy_editor_pls
-
 use crate::{
     document::{DocumentIoContext, DocumentIoError},
     io::{EditorIo, FileEditorIo},
@@ -11,14 +9,15 @@ use bevy::{
     tasks::{IoTaskPool, Task, TaskPool},
 };
 use bevy_egui::{
-    egui::{self, util::id_type_map::TypeId, Align2},
+    egui::{self, Align2},
     EguiContext,
 };
 use futures_lite::future;
-use parking_lot::{
-    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
-};
-use std::{any::Any, collections::HashMap, sync::Arc};
+use parking_lot::RwLock;
+use std::sync::Arc;
+
+mod component;
+use component::{ComponentDrawContext, ComponentStates, EditorComponent, EditorComponentWithState};
 
 mod widgets;
 
@@ -30,49 +29,6 @@ enum EditorState {
     Loading,
     Saving,
     Ready,
-}
-
-struct ComponentDrawContext<'a> {
-    project: Arc<RwLock<EditorProject>>,
-    io: Arc<dyn EditorIo>,
-    doc_context: &'a DocumentIoContext,
-    component_states: ComponentStates,
-}
-
-#[derive(Default, Clone)]
-struct ComponentStates(Arc<RwLock<HashMap<TypeId, Box<dyn Any + Send + Sync>>>>);
-
-impl ComponentStates {
-    fn insert<T>(&self, state: T)
-    where
-        T: Any + Send + Sync
-    {
-        self.0.write().insert(TypeId::of::<T>(), Box::new(state));
-    }
-
-    fn get_state<T: Any + Send + Sync>(&self) -> MappedRwLockReadGuard<T> {
-        RwLockReadGuard::map(self.0.read(), |lock| {
-            lock[&TypeId::of::<T>()].downcast_ref().unwrap()
-        })
-    }
-
-    fn get_state_mut<T: Any + Send + Sync>(&self) -> MappedRwLockWriteGuard<T> {
-        RwLockWriteGuard::map(self.0.write(), |value| {
-            value
-                .get_mut(&TypeId::of::<T>())
-                .unwrap()
-                .downcast_mut()
-                .unwrap()
-        })
-    }
-}
-
-trait EditorComponent: Send + Sync {
-    fn draw(&self, egui_context: &mut EguiContext, component_context: &ComponentDrawContext);
-}
-
-trait EditorComponentWithState: EditorComponent {
-    type State: Default + Any + Send + Sync;
 }
 
 struct EditorContext {
