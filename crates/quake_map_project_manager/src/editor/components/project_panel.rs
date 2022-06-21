@@ -29,7 +29,10 @@ fn project_settings(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
             ui.end_row();
 
             ui.label("Description");
-            if ui.text_edit_multiline(&mut settings_doc.description).changed() {
+            if ui
+                .text_edit_multiline(&mut settings_doc.description)
+                .changed()
+            {
                 settings.mark_changed();
             }
             ui.end_row();
@@ -51,7 +54,11 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
             ));
 
             if response.clicked() {
-                state.selected_entity = Some(name.to_owned());
+                if state.selected_entity.as_ref() == Some(name) {
+                    state.selected_entity = None;
+                } else {
+                    state.selected_entity = Some(name.to_owned());
+                }
             }
 
             response.context_menu(|ui| {
