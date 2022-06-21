@@ -1,9 +1,15 @@
 // Inspired by: https://github.com/jakobhellermann/bevy_editor_pls
 
-use std::{sync::Arc, collections::HashMap, any::{TypeId, Any}};
+use crate::{document::DocumentIoContext, io::EditorIo, project::EditorProject};
 use bevy_egui::EguiContext;
-use parking_lot::{RwLock, MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLockReadGuard, RwLockWriteGuard};
-use crate::{document::DocumentIoContext, project::EditorProject, io::EditorIo};
+use parking_lot::{
+    MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
+};
+use std::{
+    any::{Any, TypeId},
+    collections::HashMap,
+    sync::Arc,
+};
 
 pub struct ComponentDrawContext<'a> {
     pub project: Arc<RwLock<EditorProject>>,
@@ -18,7 +24,7 @@ pub struct ComponentStates(Arc<RwLock<HashMap<TypeId, Box<dyn Any + Send + Sync>
 impl ComponentStates {
     pub fn insert<T>(&self, state: T)
     where
-        T: Any + Send + Sync
+        T: Any + Send + Sync,
     {
         self.0.write().insert(TypeId::of::<T>(), Box::new(state));
     }
