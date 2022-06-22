@@ -58,7 +58,8 @@ pub fn num_inspector(ui: &mut egui::Ui, label: &str, num: &mut impl Numeric) -> 
     ui.horizontal(|ui| {
         ui.label(label);
         ui.add(egui::DragValue::new(num))
-    }).inner
+    })
+    .inner
 }
 
 pub fn vec3_inspector(ui: &mut egui::Ui, vec: &mut Vec3) -> bool {

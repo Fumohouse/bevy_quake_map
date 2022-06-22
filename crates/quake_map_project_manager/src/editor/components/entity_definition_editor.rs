@@ -254,10 +254,9 @@ impl EditorComponent for EntityDefinitionEditor {
             egui::Window::new(format!("Entity Definition: {}", doc.read().name()))
                 .id(egui::Id::new("entity_definition_editor"))
                 .show(egui_context.ctx_mut(), |ui| {
-                    egui::ScrollArea::vertical()
-                        .show(ui, |ui| {
-                            inspector(component_context.project, doc, ui);
-                        });
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        inspector(component_context.project, doc, ui);
+                    });
                 });
         }
     }

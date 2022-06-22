@@ -1,13 +1,7 @@
 use crate::io::{EditorIo, EditorIoError};
 use bevy::{prelude::*, reflect::TypeRegistryArc};
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::{
-    collections::HashMap,
-    ops::Deref,
-    path::Path,
-    str::Utf8Error,
-    sync::Arc,
-};
+use std::{collections::HashMap, ops::Deref, path::Path, str::Utf8Error, sync::Arc};
 use thiserror::Error;
 
 pub mod entity;
