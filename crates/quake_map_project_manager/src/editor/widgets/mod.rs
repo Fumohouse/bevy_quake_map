@@ -12,10 +12,10 @@ pub fn grid_inspector<H: Hash>(id: H, ui: &mut egui::Ui, draw: impl FnOnce(&mut 
 }
 
 pub fn rename_prompt(
+    ui: &mut egui::Ui,
     prompt: &str,
     current_value: &mut String,
     is_taken: impl FnOnce(&str) -> bool,
-    ui: &mut egui::Ui,
 ) -> Option<String> {
     const SPACING: f32 = 4.0;
 
@@ -40,7 +40,7 @@ pub fn rename_prompt(
             if name_is_taken {
                 ui.add_space(SPACING);
                 ui.horizontal_wrapped(|ui| {
-                    ui.colored_label(Color32::RED, "This entity name is already in use.");
+                    ui.colored_label(Color32::RED, "This name is already in use.");
                 });
             }
         });
@@ -48,8 +48,14 @@ pub fn rename_prompt(
     name
 }
 
-pub fn add_button(ui: &mut egui::Ui, mut add_contents: impl FnMut(&mut egui::Ui)) {
-    ui.menu_button("+ Add", |ui| {
+const ADD_TEXT: &str = "+ Add";
+
+pub fn add_button(ui: &mut egui::Ui) -> egui::Response {
+    ui.button(ADD_TEXT)
+}
+
+pub fn add_menu(ui: &mut egui::Ui, mut add_contents: impl FnMut(&mut egui::Ui)) {
+    ui.menu_button(ADD_TEXT, |ui| {
         add_contents(ui);
     });
 }

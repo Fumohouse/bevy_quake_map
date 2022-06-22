@@ -152,6 +152,39 @@ pub enum EntityProperty {
 }
 
 impl EntityProperty {
+    pub fn name(&self) -> &String {
+        match self {
+            EntityProperty::String(data) => &data.name,
+            EntityProperty::Integer(data) => &data.name,
+            EntityProperty::Boolean(data) => &data.name,
+            EntityProperty::Float(data) => &data.name,
+            EntityProperty::Choices(data, _) => &data.name,
+            EntityProperty::Flags(data) => &data.name,
+        }
+    }
+
+    pub fn set_name(&mut self, new_name: String) {
+        match self {
+            EntityProperty::String(data) => data.name = new_name,
+            EntityProperty::Integer(data) => data.name = new_name,
+            EntityProperty::Boolean(data) => data.name = new_name,
+            EntityProperty::Float(data) => data.name = new_name,
+            EntityProperty::Choices(data, _) => data.name = new_name,
+            EntityProperty::Flags(data) => data.name = new_name,
+        }
+    }
+
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            EntityProperty::String(_) => "String",
+            EntityProperty::Integer(_) => "Integer",
+            EntityProperty::Boolean(_) => "Boolean",
+            EntityProperty::Float(_) => "Float",
+            EntityProperty::Choices(_, _) => "Choices",
+            EntityProperty::Flags(_) => "Flags",
+        }
+    }
+
     fn serialize(&self) -> String {
         match self {
             EntityProperty::String(data) => data.serialize("string"),
@@ -177,15 +210,24 @@ impl EntityProperty {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-pub struct EntityPropertyData<T: ToFgdLiteral> {
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+pub struct EntityPropertyData<T: ToFgdLiteral + Default> {
     pub name: String,
     pub display_name: String,
     pub default: T,
     pub description: String,
 }
 
-impl<T: ToFgdLiteral> EntityPropertyData<T> {
+impl<T: ToFgdLiteral + Default> EntityPropertyData<T> {
+    pub fn named(name: String) -> Self {
+        EntityPropertyData::<T> {
+            name,
+            ..Default::default()
+        }
+    }
+}
+
+impl<T: ToFgdLiteral + Default> EntityPropertyData<T> {
     fn serialize(&self, type_name: &str) -> String {
         format!(
             "{}({}) : {} : {} : {}",

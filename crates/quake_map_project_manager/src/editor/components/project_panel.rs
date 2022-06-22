@@ -64,6 +64,7 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
             response.context_menu(|ui| {
                 ui.menu_button("Rename", |ui| {
                     if let Some(new_name) = widgets::rename_prompt(
+                        ui,
                         FGD_NAME_PROMPT,
                         &mut state.new_doc_name,
                         |name| {
@@ -73,7 +74,6 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
                                 false
                             }
                         },
-                        ui,
                     ) {
                         to_rename = Some((doc.clone(), new_name.clone()));
                         state.new_doc_name.clear();
@@ -104,13 +104,12 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
             doc.delete(ctx.io.as_ref()).unwrap();
         }
 
-        widgets::add_button(ui, |ui| {
-            if let Some(new_name) = widgets::rename_prompt(
-                FGD_NAME_PROMPT,
-                &mut state.new_doc_name,
-                |name| ctx.project.entities.contains_key(name),
-                ui,
-            ) {
+        widgets::add_menu(ui, |ui| {
+            if let Some(new_name) =
+                widgets::rename_prompt(ui, FGD_NAME_PROMPT, &mut state.new_doc_name, |name| {
+                    ctx.project.entities.contains_key(name)
+                })
+            {
                 let def = EntityDefinition {
                     class: FgdClass {
                         class_type: FgdClassType::Point,

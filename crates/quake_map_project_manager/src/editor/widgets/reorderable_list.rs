@@ -90,7 +90,7 @@ pub fn reorderable_list_item(
             }
 
             ui.add_sized(ui.available_size(), |ui: &mut egui::Ui| {
-                ui.with_layout(egui::Layout::left_to_right(), |ui| {
+                ui.with_layout(egui::Layout::left_to_right().with_main_wrap(true), |ui| {
                     add_contents(ui);
                 })
                 .response
