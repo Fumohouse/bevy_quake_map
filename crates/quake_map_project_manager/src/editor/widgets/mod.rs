@@ -71,7 +71,7 @@ pub fn num_inspector(ui: &mut egui::Ui, label: &str, num: &mut impl Numeric) -> 
 pub fn vec3_inspector(ui: &mut egui::Ui, vec: &mut Vec3) -> bool {
     let mut changed = false;
 
-    ui.vertical(|ui| {
+    ui.horizontal(|ui| {
         if num_inspector(ui, "X: ", &mut vec.x).changed() {
             changed = true;
         }
