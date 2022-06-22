@@ -3,7 +3,7 @@ use bevy::{prelude::*, reflect::TypeRegistryArc};
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::{
     collections::HashMap,
-    ops::{Deref, DerefMut},
+    ops::Deref,
     path::Path,
     str::Utf8Error,
     sync::Arc,
@@ -86,6 +86,10 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
 
     pub fn write(&self) -> RwLockWriteGuard<T> {
         self.internal.write()
+    }
+
+    pub fn can_read(&self) -> bool {
+        self.internal.try_read().is_some()
     }
 
     pub fn mark_changed(&self) {

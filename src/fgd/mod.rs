@@ -128,10 +128,10 @@ pub enum FgdClassProperty {
 }
 
 impl FgdClassProperty {
-    fn serialize(&self) -> String {
+    pub fn serialize(&self) -> String {
         match self {
             Self::Base(base_classes) => format!("base({})", base_classes.join(", ")),
-            Self::Model(model_path) => format!("model({})", model_path),
+            Self::Model(model_path) => format!("model({})", model_path.to_fgd_literal()),
             Self::Color(color) => format!("color({} {} {})", color.x, color.y, color.z),
             Self::Size(p1, p2) => format!(
                 "size({} {} {}, {} {} {})",

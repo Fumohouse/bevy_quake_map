@@ -1,5 +1,8 @@
-use bevy_egui::egui::{self, style::Margin, Color32};
+use bevy::math::Vec3;
+use bevy_egui::egui::{self, emath::Numeric, style::Margin, Color32};
 use std::hash::Hash;
+
+pub mod reorderable_list;
 
 pub fn grid_inspector<H: Hash>(id: H, ui: &mut egui::Ui, draw: impl FnOnce(&mut egui::Ui)) {
     egui::Grid::new(id)
@@ -43,4 +46,37 @@ pub fn rename_prompt(
         });
 
     name
+}
+
+pub fn add_button(ui: &mut egui::Ui, mut add_contents: impl FnMut(&mut egui::Ui)) {
+    ui.menu_button("+ Add", |ui| {
+        add_contents(ui);
+    });
+}
+
+pub fn num_inspector(ui: &mut egui::Ui, label: &str, num: &mut impl Numeric) -> egui::Response {
+    ui.horizontal(|ui| {
+        ui.label(label);
+        ui.add(egui::DragValue::new(num))
+    }).inner
+}
+
+pub fn vec3_inspector(ui: &mut egui::Ui, vec: &mut Vec3) -> bool {
+    let mut changed = false;
+
+    ui.vertical(|ui| {
+        if num_inspector(ui, "X: ", &mut vec.x).changed() {
+            changed = true;
+        }
+
+        if num_inspector(ui, "Y: ", &mut vec.y).changed() {
+            changed = true;
+        }
+
+        if num_inspector(ui, "Z: ", &mut vec.z).changed() {
+            changed = true;
+        }
+    });
+
+    changed
 }

@@ -104,7 +104,7 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
             doc.delete(ctx.io.as_ref()).unwrap();
         }
 
-        ui.menu_button("+ Add", |ui| {
+        widgets::add_button(ui, |ui| {
             if let Some(new_name) = widgets::rename_prompt(
                 FGD_NAME_PROMPT,
                 &mut state.new_doc_name,
