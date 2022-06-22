@@ -177,39 +177,58 @@ fn inspector(project: &EditorProject, doc: &EditorDocument<EntityDefinition>, ui
             },
         );
 
-        widgets::add_button(ui, |ui| {
-            ui.label("Select a property type:");
+        // NOTE: Must keep length and items in sync with FGD module
+        if class_properties.len() < 4 {
+            widgets::add_button(ui, |ui| {
+                ui.label("Select a property type:");
 
-            let mut clicked = false;
+                let mut clicked = false;
 
-            if ui.button("base").clicked() {
-                class_properties.push(FgdClassProperty::Base(Vec::new()));
-                clicked = true;
-            }
+                if !class_properties
+                    .iter()
+                    .any(|p| matches!(p, FgdClassProperty::Base(..)))
+                    && ui.button("base").clicked()
+                {
+                    class_properties.push(FgdClassProperty::Base(Vec::new()));
+                    clicked = true;
+                }
 
-            if ui.button("model").clicked() {
-                class_properties.push(FgdClassProperty::Model("path/to/model.obj".to_string()));
-                clicked = true;
-            }
+                if !class_properties
+                    .iter()
+                    .any(|p| matches!(p, FgdClassProperty::Model(..)))
+                    && ui.button("model").clicked()
+                {
+                    class_properties.push(FgdClassProperty::Model("path/to/model.obj".to_string()));
+                    clicked = true;
+                }
 
-            if ui.button("color").clicked() {
-                class_properties.push(FgdClassProperty::Color(UVec3::new(255, 255, 255)));
-                clicked = true;
-            }
+                if !class_properties
+                    .iter()
+                    .any(|p| matches!(p, FgdClassProperty::Color(..)))
+                    && ui.button("color").clicked()
+                {
+                    class_properties.push(FgdClassProperty::Color(UVec3::new(255, 255, 255)));
+                    clicked = true;
+                }
 
-            if ui.button("size").clicked() {
-                class_properties.push(FgdClassProperty::Size(
-                    Vec3::new(-32.0, -32.0, -32.0),
-                    Vec3::new(32.0, 32.0, 32.0),
-                ));
-                clicked = true;
-            }
+                if !class_properties
+                    .iter()
+                    .any(|p| matches!(p, FgdClassProperty::Size(..)))
+                    && ui.button("size").clicked()
+                {
+                    class_properties.push(FgdClassProperty::Size(
+                        Vec3::new(-32.0, -32.0, -32.0),
+                        Vec3::new(32.0, 32.0, 32.0),
+                    ));
+                    clicked = true;
+                }
 
-            if clicked {
-                list_changed = true;
-                ui.close_menu();
-            }
-        });
+                if clicked {
+                    list_changed = true;
+                    ui.close_menu();
+                }
+            });
+        }
 
         if props_changed || list_changed {
             doc.mark_changed();
