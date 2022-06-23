@@ -4,9 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# bevy
 bevy = "0.7"
 bevy_egui = "0.14"
 bevy_quake_map = { path = "../../" }
+bevy_infinite_grid = "0.2"
+bevy_flycam = "0.7"
+
 rfd = "0.9"
 dirs = "4.0"
 thiserror = "1.0"

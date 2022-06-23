@@ -12,6 +12,8 @@ use bevy_egui::{
     egui::{self, Align2},
     EguiContext,
 };
+use bevy_flycam::PlayerPlugin;
+use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridMaterial, InfiniteGridPlugin};
 use futures_lite::future;
 use std::sync::Arc;
 
@@ -78,10 +80,13 @@ pub struct EditorPlugin;
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         app.add_state(EditorState::Loading)
+            .add_plugin(InfiniteGridPlugin)
+            .add_plugin(PlayerPlugin)
             .init_resource::<DocumentIoContext>()
             .init_resource::<EditorContext>()
             .add_editor_component(ProjectPanel)
-            .add_editor_component(EntityDefinitionEditor);
+            .add_editor_component(EntityDefinitionEditor)
+            .add_startup_system(setup);
 
         app.add_system_set(SystemSet::on_enter(EditorState::Loading).with_system(begin_load))
             .add_system_set(SystemSet::on_update(EditorState::Loading).with_system(poll_load));
@@ -95,6 +100,12 @@ impl Plugin for EditorPlugin {
 
         app.add_system(draw_editor);
     }
+}
+
+fn setup(mut commands: Commands, mut materials: ResMut<Assets<InfiniteGridMaterial>>) {
+    commands.spawn_bundle(InfiniteGridBundle::new(
+        materials.add(InfiniteGridMaterial::default()),
+    ));
 }
 
 fn begin_load(
