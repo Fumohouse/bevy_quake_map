@@ -86,6 +86,10 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
                 });
 
                 if ui.button("Delete").clicked() {
+                    if Some(name) == state.selected_entity.as_ref() {
+                        state.selected_entity = None;
+                    }
+
                     to_remove = Some(name.to_owned());
                     ui.close_menu();
                 }
