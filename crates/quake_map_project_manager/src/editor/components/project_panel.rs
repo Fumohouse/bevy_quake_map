@@ -1,6 +1,9 @@
-use super::{ComponentDrawContext, EditorComponent, EditorComponentWithState};
+use super::{
+    tab_layout::{entity_tab_item::EntityTabItem, TabLayoutState},
+    ComponentDrawContext, EditorComponent,
+};
 use crate::{
-    document::{entity::EntityDefinition, DocumentState, EditorDocument, EditorDocumentItem},
+    document::{entity::EntityDefinition, DocumentState, EditorDocument},
     editor::widgets,
 };
 use bevy_egui::{egui, EguiContext};
@@ -11,7 +14,6 @@ const FGD_NAME_PROMPT: &str = "New FGD class name:";
 #[derive(Default)]
 pub struct ProjectPanelState {
     new_doc_name: String,
-    pub selected_entity: Option<String>,
 }
 
 pub struct ProjectPanel;
@@ -41,24 +43,22 @@ fn project_settings(ctx: &ComponentDrawContext, ui: &mut egui::Ui) {
 }
 
 fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
-    let state = ctx.component_states.get_state_mut::<ProjectPanelState>();
+    let state_ref = ctx.component_states.get_state::<ProjectPanelState>();
+    let state = &mut *state_ref.write();
+
+    let tab_state_ref = ctx.component_states.get_state::<TabLayoutState>();
+    let tab_state = &mut *tab_state_ref.write();
 
     ui.collapsing("Entity Definitions", |ui| {
+        let mut to_open = None;
         let mut to_rename = None;
         let mut to_remove = None;
 
         for (name, doc) in ctx.project.entities.iter() {
-            let response = ui.add(egui::SelectableLabel::new(
-                state.selected_entity.as_deref() == Some(name),
-                name,
-            ));
+            let response = ui.button(name);
 
             if response.clicked() {
-                if state.selected_entity.as_ref() == Some(name) {
-                    state.selected_entity = None;
-                } else {
-                    state.selected_entity = Some(name.to_owned());
-                }
+                to_open = Some(doc.clone());
             }
 
             response.context_menu(|ui| {
@@ -67,33 +67,24 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
                         ui,
                         FGD_NAME_PROMPT,
                         &mut state.new_doc_name,
-                        |name| {
-                            if let Some(document) = ctx.project.entities.get(name) {
-                                Some(document.read().name()) != state.selected_entity.as_deref()
-                            } else {
-                                false
-                            }
-                        },
+                        |name| ctx.project.entities.get(name).is_some(),
                     ) {
-                        to_rename = Some((doc.clone(), new_name.clone()));
+                        to_rename = Some((doc.clone(), new_name));
                         state.new_doc_name.clear();
                         ui.close_menu();
-
-                        if Some(name) == state.selected_entity.as_ref() {
-                            state.selected_entity = Some(new_name);
-                        }
                     }
                 });
 
                 if ui.button("Delete").clicked() {
-                    if Some(name) == state.selected_entity.as_ref() {
-                        state.selected_entity = None;
-                    }
-
+                    // TODO: SOHDGOISDHOIGSDIOGHIODSHGIOSDHIOh
                     to_remove = Some(name.to_owned());
                     ui.close_menu();
                 }
             });
+        }
+
+        if let Some(doc) = to_open {
+            tab_state.open_or(doc.id(), ctx, || Box::new(EntityTabItem { document: doc }));
         }
 
         if let Some((doc, new_name)) = to_rename {
@@ -104,6 +95,7 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
 
         if let Some(name) = to_remove {
             let doc = ctx.project.entities.remove(&name).unwrap();
+            tab_state.close(doc.id(), ctx);
             // TODO: Move to a task (?) + better error handling
             doc.delete(ctx.io.as_ref()).unwrap();
         }
@@ -117,7 +109,7 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
                 let def = EntityDefinition {
                     class: FgdClass {
                         class_type: FgdClassType::Point,
-                        name: new_name.clone(),
+                        name: new_name,
                         description: "".to_string(),
                         class_properties: vec![],
                         entity_properties: vec![],
@@ -128,13 +120,16 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
                 let doc = EditorDocument::new(def, DocumentState::New);
 
                 ctx.project.entities.insert(doc);
-                state.selected_entity = Some(new_name);
             }
         });
     });
 }
 
 impl EditorComponent for ProjectPanel {
+    fn setup(&self, states: &mut super::ComponentStates) {
+        states.insert(ProjectPanelState::default());
+    }
+
     fn draw(&self, egui_context: &mut EguiContext, component_context: &mut ComponentDrawContext) {
         egui::SidePanel::left("project_panel")
             .default_width(250.0)
@@ -150,8 +145,4 @@ impl EditorComponent for ProjectPanel {
                 });
             });
     }
-}
-
-impl EditorComponentWithState for ProjectPanel {
-    type State = ProjectPanelState;
 }

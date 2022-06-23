@@ -1,7 +1,16 @@
 use crate::io::{EditorIo, EditorIoError};
 use bevy::{prelude::*, reflect::TypeRegistryArc};
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::{collections::HashMap, ops::Deref, path::Path, str::Utf8Error, sync::Arc};
+use std::{
+    collections::HashMap,
+    ops::Deref,
+    path::Path,
+    str::Utf8Error,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+};
 use thiserror::Error;
 
 pub mod entity;
@@ -52,7 +61,13 @@ pub trait EditorDocumentItem: Sized {
     fn set_name(&mut self, new_name: &str);
 }
 
+static DOC_ID: AtomicUsize = AtomicUsize::new(0);
+
+#[derive(PartialEq, Copy, Clone)]
+pub struct DocumentId(usize);
+
 pub struct EditorDocument<T: EditorDocumentItem> {
+    id: DocumentId,
     internal: Arc<RwLock<T>>,
     state: Arc<RwLock<DocumentState>>,
 }
@@ -60,6 +75,7 @@ pub struct EditorDocument<T: EditorDocumentItem> {
 impl<T: EditorDocumentItem> Clone for EditorDocument<T> {
     fn clone(&self) -> Self {
         Self {
+            id: self.id,
             internal: self.internal.clone(),
             state: self.state.clone(),
         }
@@ -68,10 +84,27 @@ impl<T: EditorDocumentItem> Clone for EditorDocument<T> {
 
 impl<T: EditorDocumentItem> EditorDocument<T> {
     pub fn new(item: T, initial_state: DocumentState) -> Self {
+        // Similar to bevy handling
+        let id = DOC_ID
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |val| {
+                val.checked_add(1)
+            })
+            .map(DocumentId)
+            .expect("Document ID overflow");
+
         Self {
+            id,
             internal: Arc::new(RwLock::new(item)),
             state: Arc::new(RwLock::new(initial_state)),
         }
+    }
+
+    pub fn id(&self) -> DocumentId {
+        self.id
+    }
+
+    pub fn state(&self) -> DocumentState {
+        self.state.read().clone()
     }
 
     pub fn read(&self) -> RwLockReadGuard<T> {

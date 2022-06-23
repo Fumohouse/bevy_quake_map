@@ -19,8 +19,8 @@ use std::sync::Arc;
 
 mod components;
 use components::{
-    entity_definition_editor::EntityDefinitionEditor, project_panel::ProjectPanel,
-    ComponentDrawContext, ComponentStates, EditorComponent, EditorComponentWithState,
+    project_panel::ProjectPanel, tab_layout::TabLayout, ComponentDrawContext, ComponentStates,
+    EditorComponent,
 };
 
 mod widgets;
@@ -58,18 +58,18 @@ impl FromWorld for EditorContext {
 trait AddEditorComponent {
     fn add_editor_component<T>(&mut self, component: T) -> &mut App
     where
-        T: EditorComponentWithState + 'static;
+        T: EditorComponent + 'static;
 }
 
 impl AddEditorComponent for App {
     fn add_editor_component<T>(&mut self, component: T) -> &mut App
     where
-        T: EditorComponentWithState + 'static,
+        T: EditorComponent + 'static,
     {
         let mut editor_context = self.world.resource_mut::<EditorContext>();
 
+        component.setup(&mut editor_context.component_states);
         editor_context.components.push(Box::new(component));
-        editor_context.component_states.insert(T::State::default());
 
         self
     }
@@ -85,7 +85,7 @@ impl Plugin for EditorPlugin {
             .init_resource::<DocumentIoContext>()
             .init_resource::<EditorContext>()
             .add_editor_component(ProjectPanel)
-            .add_editor_component(EntityDefinitionEditor)
+            .add_editor_component(TabLayout)
             .add_startup_system(setup);
 
         app.add_system_set(SystemSet::on_enter(EditorState::Loading).with_system(begin_load))
@@ -203,6 +203,7 @@ fn poll_save(
 }
 
 fn draw_editor(
+    mut commands: Commands,
     mut editor_context: ResMut<EditorContext>,
     doc_context: Res<DocumentIoContext>,
     mut egui_context: ResMut<EguiContext>,
@@ -234,6 +235,7 @@ fn draw_editor(
         io: editor_context.io.clone(),
         doc_context: &doc_context,
         component_states: &mut editor_context.component_states,
+        commands: &mut commands,
     };
 
     for component in editor_context.components.iter() {

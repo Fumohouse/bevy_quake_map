@@ -1,32 +1,21 @@
-use super::{
-    project_panel::ProjectPanelState, ComponentDrawContext, EditorComponent,
-    EditorComponentWithState,
-};
 use crate::{
     document::{entity::EntityDefinition, EditorDocument, EditorDocumentItem},
-    editor::widgets,
+    editor::{components::ComponentDrawContext, widgets},
     project::EditorProject,
 };
 use bevy::math::{UVec3, Vec3};
-use bevy_egui::{
-    egui::{self, style::Margin, InnerResponse},
-    EguiContext,
-};
+use bevy_egui::egui::{self, style::Margin, InnerResponse};
 use bevy_quake_map::fgd::{
     Choice, EntityProperty, EntityPropertyData, FgdClassProperty, FgdClassType, Flag, FlagsData,
     ToFgdLiteral,
 };
-use parking_lot::RwLockReadGuard;
 
 const INSPECTOR_MARGIN: f32 = 8.0;
 
 #[derive(Default)]
 pub struct EntityDefinitionEditorState {
-    selected_document: Option<EditorDocument<EntityDefinition>>,
     new_property_name: String,
 }
-
-pub struct EntityDefinitionEditor;
 
 fn inspect_class_prop(
     ui: &mut egui::Ui,
@@ -525,8 +514,12 @@ fn entity_property_inspector(
     }
 }
 
-fn inspector(state: &mut EntityDefinitionEditorState, project: &EditorProject, ui: &mut egui::Ui) {
-    let doc = state.selected_document.as_ref().unwrap();
+fn inspector(
+    state: &mut EntityDefinitionEditorState,
+    doc: &EditorDocument<EntityDefinition>,
+    project: &EditorProject,
+    ui: &mut egui::Ui,
+) {
     let def = &mut *doc.write();
 
     widgets::grid_inspector("entity_definition_inspector", ui, |ui| {
@@ -577,47 +570,22 @@ fn inspector(state: &mut EntityDefinitionEditorState, project: &EditorProject, u
     });
 }
 
-impl EditorComponent for EntityDefinitionEditor {
-    fn draw(&self, egui_context: &mut EguiContext, component_context: &mut ComponentDrawContext) {
-        let selected_entity = component_context
-            .component_states
-            .get_state::<ProjectPanelState>()
-            .selected_entity
-            .clone();
+pub fn draw(
+    egui_context: &egui::Context,
+    doc: &EditorDocument<EntityDefinition>,
+    component_context: &mut ComponentDrawContext,
+) {
+    let state_ref = component_context
+        .component_states
+        .get_state::<EntityDefinitionEditorState>();
 
-        let mut state = component_context
-            .component_states
-            .get_state_mut::<EntityDefinitionEditorState>();
+    let state = &mut *state_ref.write();
 
-        if state
-            .selected_document
-            .as_ref()
-            .map(|doc| RwLockReadGuard::map(doc.read(), |doc| doc.name()))
-            .as_deref()
-            != selected_entity.as_deref()
-        {
-            state.selected_document = selected_entity.as_ref().map(|name| {
-                component_context
-                    .project
-                    .entities
-                    .get(name)
-                    .unwrap()
-                    .clone()
+    egui::Window::new(format!("Entity Definition: {}", doc.read().name()))
+        .id(egui::Id::new("entity_definition_editor"))
+        .show(egui_context, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                inspector(state, doc, component_context.project, ui);
             });
-        }
-
-        if let Some(doc) = state.selected_document.as_ref() {
-            egui::Window::new(format!("Entity Definition: {}", doc.read().name()))
-                .id(egui::Id::new("entity_definition_editor"))
-                .show(egui_context.ctx_mut(), |ui| {
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        inspector(state, component_context.project, ui);
-                    });
-                });
-        }
-    }
-}
-
-impl EditorComponentWithState for EntityDefinitionEditor {
-    type State = EntityDefinitionEditorState;
+        });
 }

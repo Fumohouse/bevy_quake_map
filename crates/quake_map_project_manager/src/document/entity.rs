@@ -14,7 +14,7 @@ use serde::{
     Deserialize, Serialize,
 };
 
-pub const ENTITIES_DIR: &str = "entities/";
+pub const ENTITIES_DIR: &str = "entities";
 
 const STRUCT_NAME: &str = "EntityDefinition";
 const FIELD_CLASS: &str = "class";
