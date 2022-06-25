@@ -1,5 +1,5 @@
 [package]
-name = "quake_map_project_manager"
+name = "bevy_quake_map_editor"
 version = "0.1.0"
 edition = "2021"
 

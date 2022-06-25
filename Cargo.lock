@@ -649,6 +649,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_quake_map_editor"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_egui",
+ "bevy_flycam",
+ "bevy_infinite_grid",
+ "bevy_quake_map",
+ "dirs",
+ "futures-lite",
+ "parking_lot 0.12.1",
+ "rfd",
+ "ron",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "bevy_rapier3d"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2990,24 +3008,6 @@ name = "profiling"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f61dcf0b917cd75d4521d7343d1ffff3d1583054133c9b5cbea3375c703c40d"
-
-[[package]]
-name = "quake_map_project_manager"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_egui",
- "bevy_flycam",
- "bevy_infinite_grid",
- "bevy_quake_map",
- "dirs",
- "futures-lite",
- "parking_lot 0.12.1",
- "rfd",
- "ron",
- "serde",
- "thiserror",
-]
 
 [[package]]
 name = "quote"
