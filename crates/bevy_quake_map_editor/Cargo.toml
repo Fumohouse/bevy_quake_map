@@ -8,6 +8,7 @@ edition = "2021"
 bevy = "0.7"
 bevy_egui = "0.14"
 bevy_quake_map = { path = "../../" }
+bevy_quake_map_editor_common = { path = "../bevy_quake_map_editor_common" }
 bevy_infinite_grid = "0.2"
 bevy_flycam = "0.7"
 

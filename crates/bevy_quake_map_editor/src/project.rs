@@ -4,9 +4,9 @@ use crate::{
         game_settings::{GameSettings, SETTINGS_FILE},
         DocumentCollection, DocumentIoContext, DocumentIoError, DocumentState, EditorDocument,
     },
-    io::EditorIo,
 };
 use bevy::prelude::*;
+use bevy_quake_map_editor_common::io::MapIo;
 use std::path::Path;
 
 #[derive(Clone)]
@@ -15,7 +15,7 @@ pub struct EditorProject {
     pub entities: DocumentCollection<EntityDefinition>,
 }
 
-fn search_directory(io: &dyn EditorIo, path: &Path, mut cb: impl FnMut(Vec<u8>)) {
+fn search_directory(io: &dyn MapIo, path: &Path, mut cb: impl FnMut(Vec<u8>)) {
     if let Ok(files) = io.read_directory(path) {
         for file in files {
             if let Ok(contents) = io.read_file(&file) {
@@ -26,7 +26,7 @@ fn search_directory(io: &dyn EditorIo, path: &Path, mut cb: impl FnMut(Vec<u8>))
 }
 
 impl EditorProject {
-    pub fn load(io: &dyn EditorIo, doc_context: DocumentIoContext) -> Self {
+    pub fn load(io: &dyn MapIo, doc_context: DocumentIoContext) -> Self {
         let settings = io
             .read_file(Path::new(SETTINGS_FILE))
             .map(|buf| {
@@ -51,7 +51,7 @@ impl EditorProject {
 
     pub fn save(
         &self,
-        io: &dyn EditorIo,
+        io: &dyn MapIo,
         doc_context: DocumentIoContext,
     ) -> Result<(), DocumentIoError> {
         self.settings.save(io, &doc_context).unwrap_or_else(|err| {

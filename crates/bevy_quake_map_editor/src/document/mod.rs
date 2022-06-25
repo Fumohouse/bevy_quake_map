@@ -1,5 +1,5 @@
-use crate::io::{EditorIo, EditorIoError};
 use bevy::{prelude::*, reflect::TypeRegistryArc};
+use bevy_quake_map_editor_common::io::{MapIoError, MapIo};
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::{
     collections::HashMap,
@@ -36,7 +36,7 @@ pub enum DocumentIoError {
     #[error("utf8 error: {0}")]
     Utf8(#[from] Utf8Error),
     #[error("editor io error: {0}")]
-    EditorIo(#[from] EditorIoError),
+    MapIo(#[from] MapIoError),
 }
 
 #[derive(Clone)]
@@ -145,7 +145,7 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
 
     pub fn save(
         &self,
-        io: &dyn EditorIo,
+        io: &dyn MapIo,
         doc_context: &DocumentIoContext,
     ) -> Result<(), DocumentIoError> {
         if let DocumentState::Clean = *self.state.read() {
@@ -177,7 +177,7 @@ impl<T: EditorDocumentItem> EditorDocument<T> {
         *self.state.write() = DocumentState::Renamed(old_path);
     }
 
-    pub fn delete(&self, io: &dyn EditorIo) -> Result<(), DocumentIoError> {
+    pub fn delete(&self, io: &dyn MapIo) -> Result<(), DocumentIoError> {
         if let DocumentState::New = *self.state.read() {
             return Ok(());
         }

@@ -1,6 +1,6 @@
 use crate::{
     document::{DocumentIoContext, DocumentIoError},
-    io::{EditorIo, FileEditorIo},
+    io::{FileEditorIo},
     project::EditorProject,
     EditorProjectFolder,
 };
@@ -14,6 +14,7 @@ use bevy_egui::{
 };
 use bevy_flycam::PlayerPlugin;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridMaterial, InfiniteGridPlugin};
+use bevy_quake_map_editor_common::io::MapIo;
 use futures_lite::future;
 use std::sync::Arc;
 
@@ -33,7 +34,7 @@ enum EditorState {
 }
 
 struct EditorContext {
-    io: Arc<dyn EditorIo>,
+    io: Arc<dyn MapIo>,
     project: Option<EditorProject>,
     task_pool: TaskPool,
     components: Vec<Box<dyn EditorComponent>>,

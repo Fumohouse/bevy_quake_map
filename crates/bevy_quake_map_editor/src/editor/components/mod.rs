@@ -1,8 +1,9 @@
 // Inspired by: https://github.com/jakobhellermann/bevy_editor_pls
 
-use crate::{document::DocumentIoContext, io::EditorIo, project::EditorProject};
+use crate::{document::DocumentIoContext, project::EditorProject};
 use bevy::prelude::Commands;
 use bevy_egui::EguiContext;
+use bevy_quake_map_editor_common::io::MapIo;
 use parking_lot::{
     MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
 };
@@ -18,7 +19,7 @@ pub mod tab_layout;
 
 pub struct ComponentDrawContext<'a, 'w, 's> {
     pub project: &'a mut EditorProject,
-    pub io: Arc<dyn EditorIo>,
+    pub io: Arc<dyn MapIo>,
     pub doc_context: &'a DocumentIoContext,
     pub component_states: &'a mut ComponentStates,
     pub commands: &'a mut Commands<'w, 's>,

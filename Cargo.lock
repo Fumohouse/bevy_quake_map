@@ -657,12 +657,21 @@ dependencies = [
  "bevy_flycam",
  "bevy_infinite_grid",
  "bevy_quake_map",
+ "bevy_quake_map_editor_common",
  "dirs",
  "futures-lite",
  "parking_lot 0.12.1",
  "rfd",
  "ron",
  "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "bevy_quake_map_editor_common"
+version = "0.1.0"
+dependencies = [
+ "bevy",
  "thiserror",
 ]
 
