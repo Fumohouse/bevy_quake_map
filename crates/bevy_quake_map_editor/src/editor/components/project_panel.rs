@@ -76,7 +76,6 @@ fn entity_selector(ctx: &mut ComponentDrawContext, ui: &mut egui::Ui) {
                 });
 
                 if ui.button("Delete").clicked() {
-                    // TODO: SOHDGOISDHOIGSDIOGHIODSHGIOSDHIOh
                     to_remove = Some(name.to_owned());
                     ui.close_menu();
                 }
